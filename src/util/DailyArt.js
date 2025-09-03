@@ -1,5 +1,5 @@
 import seedrandom from "seedrandom";
-import { countElements, countSculptures, countMurals } from "../taincan/taincanAPI.js";
+import { countElements, countSculptures, countMurals, getArtData, MURALS_METAQUERY, SCULPTURES_METAQUERY } from "../taincan/taincanAPI.js";
 
 
 //retorna o indice da obra de hoje a partir do número de obras totais
@@ -13,29 +13,19 @@ const getDailyArtIndex = (artsNumber, gameMode) => {
 
 export const getTodaysClassicArt = async () => {
     const n = await countElements();
-    return getDailyArtIndex(n, "Clássico");
+    const artIndex = getDailyArtIndex(n, "Clássico");
+    return await getArtData(artIndex);
 };
 
 export const getTodaysMuralArt = async () => {
     const n = await countMurals();
-    return getDailyArtIndex(n, "Mural");
+    const artIndex = getDailyArtIndex(n, "Mural");
+    return await getArtData(artIndex, MURALS_METAQUERY)
 };
 
 export const getTodaysSculptureArt = async () => {
     const n = await countSculptures();
-    return getDailyArtIndex(n, "Escultura");
+    const artIndex = getDailyArtIndex(n, "Escultura");
+    return await getArtData(artIndex, SCULPTURES_METAQUERY)
 };
-
-//exemplo de uso das funções
-//remover em breve!!
-getTodaysClassicArt().then(index => {
-    console.log("Today's classic art index:", index);
-});
-getTodaysMuralArt().then(index => {
-    console.log("Today's mural art index:", index);
-});
-getTodaysSculptureArt().then(index => {
-    console.log("Today's sculpture art index:", index);
-});
-
 export default getDailyArtIndex;
