@@ -1,5 +1,5 @@
 import seedrandom from "seedrandom";
-import { countElements, countEsculptures, countMurals } from "../taincan/taincanAPI.js";
+import { countElements, countSculptures, countMurals } from "../taincan/taincanAPI.js";
 
 
 //retorna o indice da obra de hoje a partir do número de obras totais
@@ -22,7 +22,7 @@ export const getTodaysMuralArt = async () => {
 };
 
 export const getTodaysSculptureArt = async () => {
-    const n = await countEsculptures();
+    const n = await countSculptures();
     return getDailyArtIndex(n, "Escultura");
 };
 

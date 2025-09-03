@@ -18,6 +18,6 @@ export const countMurals = async () => {
     return await countElements("metaquery[0][key]=2200&metaquery[0][compare]=LIKE&metaquery[0][value]=.MUR.");
 }
 
-export const countEsculptures = async () => {
+export const countSculptures = async () => {
     return await countElements("metaquery[0][key]=2200&metaquery[0][compare]=LIKE&metaquery[0][value]=.ESC.");
 }
