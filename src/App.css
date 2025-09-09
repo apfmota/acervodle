@@ -142,53 +142,188 @@ h1 {
   color: inherit;
 }
 
-.game-page {
-  min-height: 100vh;
-  padding: 2rem;
-  position: relative;
-  z-index: 1;
+.game-page .title-box {
+  margin: 0 auto;
+  transform-origin: center;
 }
 
-.back-button {
-  display: inline-block;
-  padding: 0.5rem 1rem;
+.modes-icons {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin: 1rem 0;
+}
+
+.icon-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid #5D4037;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+.icon-circle.active {
+  background-color: #D4B896;
+  transform: scale(1.1);
+}
+
+.mode-icon {
+  font-size: 1.5rem;
+  color: #5D4037;
+  margin-top: 15px; /* ESSE VALOR ESTÁ AQUI PARA ALINHAR OS ÍCONES DE CIMA CORRETAMENTE */
+}
+
+.mode-icon-link {
+  text-decoration: none;
+}
+
+.utility-icons {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 1rem auto 2rem;
+  padding: 1rem;
+  border: 2px solid #5D4037;
+  border-radius: 10px;
+  max-width: 200px;
+  background-color: #D4B896; 
+}
+
+.utility-icon {
+  font-size: 1.5rem;
+  color: #5D4037;
+  cursor: pointer;
+}
+
+.mural-container {
+  border: 3px solid #5D4037;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin: 1rem auto;
+  max-width: 600px;
+  text-align: center;
+  background-color: #D4B896; 
+}
+
+.mural-question {
+  font-family: 'Cinzel', serif;
+  color: #3A2E26;
+  margin-bottom: 1rem;
+}
+
+.image-wrapper {
+  padding: 10px;
+}
+
+.mural-image {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 2px solid #5D4037;
+}
+
+.mural-hint {
+  font-size: 0.9rem;
+  color: #5D4037;
+  margin-top: 1rem;
+  opacity: 0.7;
+}
+
+.guess-form {
+  display: flex;
+  justify-content: center;
+  margin: 2rem auto;
+  max-width: 500px;
+}
+
+.guess-input {
+  flex: 1;
+  padding: 0.8rem;
+  border: 2px solid #5D4037;
+  border-radius: 5px 0 0 5px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+}
+
+.guess-button {
+  padding: 0.8rem 1.5rem;
   background-color: #5D4037;
   color: white;
-  text-decoration: none;
-  border-radius: 5px;
-  margin-bottom: 2rem;
-  transition: background-color 0.3s;
+  border: none;
+  border-radius: 0 5px 5px 0;
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
 }
 
-.back-button:hover {
-  background-color: #3A2E26;
-}
-
-.game-content {
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 2rem;
-  border-radius: 10px;
-  max-width: 800px;
+.attempts-list {
+  max-width: 500px;
   margin: 0 auto;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column-reverse;
 }
 
-.art-info {
-  font-size: 1.2rem;
-  line-height: 1.6;
+.wrong-attempt {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 0.5rem 1rem;
+  margin: 0.5rem 0;
+  border-radius: 5px;
+  border: 1px solid #ef9a9a;
 }
 
 @media (max-width: 768px) {
-  .modes-container {
+  .modes-icons {
+    gap: 1rem;
+  }
+  
+  .icon-circle {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .mural-container {
+    margin: 1rem;
+  }
+  
+  .guess-form {
     flex-direction: column;
-    align-items: center;
   }
   
-  h1 {
-    font-size: 2.5rem;
+  .guess-input {
+    border-radius: 5px;
+    margin-bottom: 0.5rem;
   }
   
-  .subtitle {
-    font-size: 1.5rem;
+  .guess-button {
+    border-radius: 5px;
   }
+}
+
+.success-message {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 1rem;
+  border-radius: 5px;
+  border: 1px solid #a5d6a7;
+  max-width: 500px;
+  margin: 1rem auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: bold;
+}
+
+.success-icon {
+  font-size: 1.2rem;
+}
+
+.guess-input:disabled,
+.guess-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
