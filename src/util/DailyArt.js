@@ -14,7 +14,9 @@ const getDailyArtIndex = (artsNumber, gameMode) => {
 export const getTodaysClassicArt = async () => {
     const n = await countElements();
     const artIndex = getDailyArtIndex(n, "Clássico");
-    return await getArtData(artIndex);
+    const artData = await getArtData(artIndex);
+    console.log("Today's classic art data:", artData);
+    return artData;
 };
 
 export const getTodaysMuralArt = async () => {
