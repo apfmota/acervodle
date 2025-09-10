@@ -4,19 +4,24 @@ import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaCheck } 
 import muralPlaceholder from '../assets/Painel7.jpg';
 
 const MuralGame = ({ muralArt }) => {
+  const [xPosition, setXPosition] = useState((Math.random() * 100) % 100)
+  const [yPosition, setYPosition] = useState((Math.random() * 100) % 100)
+  const [zoom, setZoom] = useState(800)
   const [guess, setGuess] = useState('');
   const [attempts, setAttempts] = useState([]);
   const [hasWon, setHasWon] = useState(false);
 
   const handleSubmit = (e) => {
+    console.log(muralArt)
     e.preventDefault();
     if (guess.trim() && muralArt) {
-      const isCorrect = guess.toLowerCase() === muralArt.title.toLowerCase(); // pegando o .title
+      const isCorrect = guess.toLowerCase() === muralArt.title; // pegando o .title
       
       if (isCorrect) {
         setHasWon(true);
       } else {
         // Adiciona a tentativa no início do array para que as mais recentes fiquem no topo
+        setZoom(Math.max(100, zoom - 80))
         setAttempts([guess, ...attempts]);
         setGuess('');
       }
@@ -62,13 +67,13 @@ const MuralGame = ({ muralArt }) => {
       {/* Área da imagem do mural com fundo */}
       <div className="mural-container">
         <h3 className="mural-question">A que mural pertence a fotografia?</h3>
-        <div className="image-wrapper">
-          <img 
-            src={muralPlaceholder} 
-            alt="Mural para adivinhar" 
-            className="mural-image"
-          />
-        </div>
+        <div className="image-wrapper" style={{
+          height: '300px', // precisa ter uma altura fixa, mas não sei se deveria ser essa
+          backgroundImage: `url(${muralArt.thumbnail.full[0]})`,
+          backgroundSize: zoom + "%",
+          backgroundPositionX: xPosition + "%",
+          backgroundPositionY: yPosition + "%"
+        }}></div>
         <p className="mural-hint">A cada tentativa expande um pouco</p>
         
         {/* Exibe o nome do mural para testes - REMOVER DEPOIS NA VERSÃO FINAL */}

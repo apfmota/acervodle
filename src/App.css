@@ -216,6 +216,8 @@ h1 {
 
 .image-wrapper {
   padding: 10px;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .mural-image {
