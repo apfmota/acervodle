@@ -7,8 +7,8 @@ import Home from './components/Home';
 import ClassicGame from './components/ClassicGame';
 import MuralGame from './components/MuralGame';
 import SculptureGame from './components/SculptureGame';
+import GuessLocation from './components/GuessLocation'; 
 import backgroundImage from './assets/background_image.png';
-
 function App() {
   const [classicArt, setClassicArt] = useState();
   const [muralArt, setMuralArt] = useState();
@@ -36,6 +36,7 @@ function App() {
           <Route path="/classic" element={<ClassicGame classicArt={classicArt} />} />
           <Route path="/mural" element={<MuralGame muralArt={muralArt} />} />
           <Route path="/sculpture" element={<SculptureGame sculptureArt={sculptureArt} />} />
+          <Route path="/map" element={<GuessLocation />} />
         </Routes>
       </div>
     </Router>
