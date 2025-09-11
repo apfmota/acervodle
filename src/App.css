@@ -46,6 +46,7 @@
   padding: 1.5rem 3rem;
   margin: 0 auto 1.5rem;
   display: inline-block;
+  transition: all 0.3s ease;
 }
 
 h1 {
@@ -172,7 +173,7 @@ h1 {
 .mode-icon {
   font-size: 1.5rem;
   color: #5D4037;
-  margin-top: 15px; /* ESSE VALOR ESTÁ AQUI PARA ALINHAR OS ÍCONES DE CIMA CORRETAMENTE */
+  margin-top: 15px; /* ajuste alinhamento */
 }
 
 .mode-icon-link {
@@ -195,7 +196,39 @@ h1 {
 .utility-icon {
   font-size: 1.5rem;
   color: #5D4037;
+  position: relative;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.utility-icon:hover {
+  color: white;
+  transform: scale(1.1);
+}
+
+.tooltip {
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #D4B896 0%, #A78A7F 100%);
+  border: 2px solid #5D4037;
+  border-radius: 8px;
+  padding: 6px 10px;
+  white-space: nowrap;
+  color: #3A2E26;
+  font-family: 'Cinzel', serif;
+  font-size: 0.75rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.utility-icon:hover .tooltip {
+  opacity: 1;
+  visibility: visible;
+  bottom: -35px;
 }
 
 .mural-container {
@@ -226,6 +259,12 @@ h1 {
   object-fit: cover;
   border-radius: 5px;
   border: 2px solid #5D4037;
+  transition: all 0.3s ease;
+}
+
+.mural-image:hover {
+  border-color: #FFFFFF;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
 }
 
 .mural-hint {
@@ -271,10 +310,18 @@ h1 {
 .wrong-attempt {
   background-color: #ffebee;
   color: #c62828;
-  padding: 0.5rem 1rem;
-  margin: 0.5rem 0;
-  border-radius: 5px;
-  border: 1px solid #ef9a9a;
+  padding: 1rem 1.5rem;  
+  margin: 0.8rem 0;      
+  font-size: 1.1rem;     
+  border-radius: 8px;
+  border: 2px solid #ef9a9a;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.wrong-attempt:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(198, 40, 40, 0.3);
 }
 
 @media (max-width: 768px) {
@@ -308,9 +355,10 @@ h1 {
 .success-message {
   background-color: #e8f5e9;
   color: #2e7d32;
-  padding: 1rem;
-  border-radius: 5px;
-  border: 1px solid #a5d6a7;
+  padding: 1rem 1.5rem;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  border: 2px solid #a5d6a7;
   max-width: 500px;
   margin: 1rem auto;
   display: flex;
@@ -318,6 +366,12 @@ h1 {
   justify-content: center;
   gap: 0.5rem;
   font-weight: bold;
+  position: relative;
+}
+
+.success-message:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(46, 125, 50, 0.4);
 }
 
 .success-icon {
@@ -328,4 +382,90 @@ h1 {
 .guess-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.stats-text {
+  font-size: 1rem;
+  color: #5D4037;
+  margin: 1.5rem 0;
+  font-style: italic;
+  text-align: center;
+}
+
+.yesterday-text {
+  font-size: 1rem;
+  color: #5D4037;
+  margin-top: 2rem;
+  padding: 0.8rem;
+  text-align: center;
+}
+
+.mural-image-border {
+  border: 2px solid #5D4037;
+  border-radius: 5px;
+  padding: 5px;
+  display: inline-block;
+}
+
+.attempt-count {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: #5D4037;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 3px 5px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.attempt-count-tooltip {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: linear-gradient(135deg, #D4B896 0%, #A78A7F 100%);
+  border: 2px solid #5D4037;
+  border-radius: 8px;
+  padding: 6px 10px;
+  white-space: nowrap;
+  color: #3A2E26;
+  font-family: 'Cinzel', serif;
+  font-size: 0.75rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.attempt-count:hover .attempt-count-tooltip {
+  opacity: 1;
+  visibility: visible;
+  top: -35px;
+}
+
+.people-icon {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.icon-circle {
+  transition: all 0.3s ease;
+}
+
+.icon-circle:hover {
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: 0 5px 15px rgba(93, 64, 55, 0.4);
+}
+
+.title-box {
+  transition: all 0.3s ease;
+}
+
+.title-box:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 15px 30px rgba(93, 64, 55, 0.6);
 }
