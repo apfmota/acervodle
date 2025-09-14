@@ -22,6 +22,7 @@ const MuralGame = ({ muralArt }) => {
 
       if (isCorrect) {
         setHasWon(true);
+        setZoom(100);
       } else {
         setZoom(Math.max(100, zoom - 80));
         setAttempts([guess, ...attempts]);
