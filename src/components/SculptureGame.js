@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaCheck, FaMapMarkerAlt } from 'react-icons/fa';
 
-const SculptureGame = ({ sculptureArt }) => {
+const SculptureGame = ({ loadingArt }) => {
+
+  useEffect(() => {
+    loadingArt.then(setSculptureArt)
+  }, [])
+
+  const [sculptureArt, setSculptureArt] = useState();
   const [guess, setGuess] = useState('');
   const [attempts, setAttempts] = useState([]);
   const [hasWon, setHasWon] = useState(false);

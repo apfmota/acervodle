@@ -575,6 +575,9 @@ h1 {
 .characteristic-input {
   display: flex;
   flex-direction: column;
+  min-width: 180px;
+  max-width: 100%;
+  width: auto;
 }
 
 .characteristic-input label {
@@ -639,7 +642,7 @@ h1 {
 .attempts-header,
 .attempt-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 0.75rem;
   text-align: center;
 }
@@ -698,6 +701,13 @@ h1 {
   border: 1px solid rgba(255,255,255,0.08);
 }
 
+.attempt-square.partially {
+  background-color: #a3af61;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(76,175,80,0.14);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
 /* errado */
 .attempt-square.wrong {
   background-color: #c62828;
@@ -720,7 +730,7 @@ h1 {
 @media (max-width: 480px) {
   .attempts-header,
   .attempt-row {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(6, 1fr);
   }
   .attempt-square { width: 46px; height: 46px; min-width:46px; min-height:46px; font-size:0.75rem; padding:4px; }
   .col-underline { height:4px; width:72%; }

@@ -1,9 +1,16 @@
 // src/components/MuralGame.js
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaCheck } from 'react-icons/fa';
 
-const MuralGame = ({ muralArt }) => {
+const MuralGame = ({ loadingArt }) => {
+
+  useEffect(() => {
+    loadingArt.then(setMuralArt)
+  }, [])
+
+  const [muralArt, setMuralArt] = useState();
+
   const [xPosition] = useState((Math.random() * 100) % 100);
   const [yPosition] = useState((Math.random() * 100) % 100);
   const [zoom, setZoom] = useState(800);

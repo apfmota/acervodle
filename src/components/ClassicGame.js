@@ -1,60 +1,61 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaLightbulb } from 'react-icons/fa';
+import Select from 'react-select';
+import { fillPossibleValues, getAllPossibleValues, getArtProperties } from '../util/ClassicModeDataFetch.js';
 
-const ClassicGame = ({ classicArt }) => {
-  const [characteristics, setCharacteristics] = useState({
-    artista: '',
-    material: '',
-    designacao: '',
-    periodo: ''
-  });
+const ClassicGame = ({ loadingArt }) => {
+
+  const [classicArt, setClassicArt] = useState();
+
+  useEffect(() => {
+    fillPossibleValues().then(() => setOptionsLoaded(true));
+    loadingArt.then((art) => {
+      setClassicArt(art);
+      setAnswer(getArtProperties(art));
+      console.log(getArtProperties(art));
+    }); 
+  }, [])
+
+  const properties = [
+    {label: 'Técnica', property: 'tecnica-3'},
+    {label: 'Material', property: 'material'},
+    {label: 'Moldura', property: 'moldura'},
+    {label: 'Suporte', property: 'suporte'},
+    {label: 'Década', property: 'data-da-obra-2'},
+    {label: 'Temática', property: 'tematica'},
+  ]
+
+  const [currentValues, setCurrentValues] = useState({});
+  const [optionsLoaded, setOptionsLoaded] = useState(false);
   const [attempts, setAttempts] = useState([]);
   const [hasWon, setHasWon] = useState(false);
   const [hintsUnlocked, setHintsUnlocked] = useState([false, false, false]);
-  const [correctAnswers, setCorrectAnswers] = useState({
-    artista: false,
-    material: false,
-    designacao: false,
-    periodo: false
-  });
+  const [answer, setAnswer] = useState({})
 
-  const normalize = (v) =>
-    (v ?? '')
-      .toString()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim()
-      .toLowerCase();
-
-  const checkCorrect = (field, value) => {
-    const meta = classicArt?.metadata?.[field]?.value;
-    if (!meta) return false;
-    if (Array.isArray(meta)) return meta.map(normalize).includes(normalize(value));
-    return normalize(meta) === normalize(value);
+  const checkCorrect = (property, value) => {
+    if (value == undefined) {
+      value = [];
+    }
+    return answer[property].length == value.length && answer[property].every(v => value.includes(v));
   };
 
-  const handleInputChange = (e, field) => {
-    setCharacteristics({ ...characteristics, [field]: e.target.value });
-  };
+  const checkPartiallyCorrect = (property, value) => {
+    if (value == undefined) {
+      value = [];
+    }
+    return answer[property].some(v => value.includes(v));
+  }
 
   const handleSubmit = (e) => {
+    console.log(Object.keys(answer));
+
     e.preventDefault();
     if (!classicArt) return;
-
-    const newCorrectAnswers = {
-      artista: checkCorrect('artista', characteristics.artista),
-      material: checkCorrect('material', characteristics.material),
-      designacao: checkCorrect('designacao', characteristics.designacao),
-      periodo: checkCorrect('periodo', characteristics.periodo),
-    };
-
-    setCorrectAnswers(newCorrectAnswers);
-
-    if (Object.values(newCorrectAnswers).every(Boolean)) {
+    setAttempts([{ ...currentValues }, ...attempts]);
+    if (Object.keys(answer).every(p => checkCorrect(p, currentValues[p]))) {
       setHasWon(true);
     } else {
-      setAttempts([{ ...characteristics }, ...attempts]);
 
       // liberar dicas
       const newHints = [...hintsUnlocked];
@@ -62,16 +63,37 @@ const ClassicGame = ({ classicArt }) => {
       if (attempts.length + 1 >= 6) newHints[1] = true;
       if (attempts.length + 1 >= 9) newHints[2] = true;
       setHintsUnlocked(newHints);
-
-      // limpar só os errados
-      setCharacteristics({
-        artista: newCorrectAnswers.artista ? characteristics.artista : '',
-        material: newCorrectAnswers.material ? characteristics.material : '',
-        designacao: newCorrectAnswers.designacao ? characteristics.designacao : '',
-        periodo: newCorrectAnswers.periodo ? characteristics.periodo : '',
-      });
     }
   };
+
+  const currentValueToSelectValue = (property) => {
+    let currentValue = []
+    if (currentValues[property] && currentValues[property].length > 0) {
+      currentValue = currentValues[property].map(p => { return { label: p, value: p} })
+    } else {
+      currentValue = [{ label: 'Nenhum', value: 'Nenhum'}]
+    }
+    if (answer[property.length <= 1]) {
+      return currentValue[0];
+    }
+    return currentValue;
+  }
+
+  const setCurrentPropertyValue = (property, value) => {
+    let newValue;
+    if (value != null) {
+      newValue = (Array.isArray(value) ? value : [value]).map((v) => v.value);
+      if (newValue.every(v => (v == "Nenhum"))) {
+        newValue = [];
+      }
+    } else {
+      newValue = [];
+    }
+    setCurrentValues(prev => ({
+      ...prev,
+      [property]: newValue
+    }));
+  }
 
   return (
     <div className="game-page">
@@ -123,41 +145,40 @@ const ClassicGame = ({ classicArt }) => {
         </div>
       </div>
 
-      {/* Imagem */}
-      {classicArt && (
-        <div className="mural-container" style={{ maxWidth: '500px' }}>
-          <img src={classicArt.thumbnail?.full[0] || ''} alt="Obra" className="mural-image" style={{ maxHeight: '300px' }} />
-        </div>
-      )}
+      /* Imagem */
+        {classicArt && (
+          <div className="mural-container" style={{ maxWidth: '500px' }}>
+            <img src={classicArt.thumbnail?.full[0] || ''} alt="Obra" className="mural-image" style={{ maxHeight: '300px' }} />
+          </div>
+        )}
 
-      {/* Inputs */}
-      <form onSubmit={handleSubmit} className="characteristics-form">
-        <div className="characteristics-grid">
-          {['artista', 'material', 'designacao', 'periodo'].map((field) => (
-            <div key={field} className="characteristic-input">
-              <label>{field[0].toUpperCase() + field.slice(1)}</label>
-              <input
-                type="text"
-                value={characteristics[field]}
-                onChange={(e) => handleInputChange(e, field)}
-                placeholder={`Digite o ${field}...`}
-                disabled={correctAnswers[field] || hasWon}
-                className={correctAnswers[field] ? 'correct-answer' : ''}
-              />
-            </div>
-          ))}
-        </div>
-        <button type="submit" className="guess-button classic-enter-button" disabled={hasWon}>
-          ENTER
-        </button>
-      </form>
+        {/* Inputs */}
+        <form onSubmit={handleSubmit} className="characteristics-form">
+          <div className="characteristics-grid">
+            {properties.map((field) => (
+          <div key={field.property} className="characteristic-input">
+            <label>{field.label}</label>
+            <Select
+              value={currentValueToSelectValue(field.property)}
+              isClearable
+              isMulti={answer[field.property]?.length > 1}
+              onChange={(selected) => setCurrentPropertyValue(field.property, selected)}
+              options={getAllPossibleValues(field.property)}
+            />
+          </div>
+            ))}
+          </div>
+          <button type="submit" className="guess-button classic-enter-button" disabled={hasWon}>
+            ENTER
+          </button>
+        </form>
 
-      {/* Tentativas */}
+        {/* Tentativas */}
       <div className="attempts-grid">
         <div className="attempts-header">
-          {['Artista', 'Material', 'Designação', 'Período'].map((t) => (
-            <div key={t} className="col-title">
-              <div className="col-title-text">{t}</div>
+          {properties.map((t) => (
+            <div key={t.property} className="col-title">
+              <div className="col-title-text">{t.label}</div>
               <div className="col-underline" />
             </div>
           ))}
@@ -165,29 +186,20 @@ const ClassicGame = ({ classicArt }) => {
 
         {attempts.map((attempt, idx) => (
           <div key={idx} className="attempt-row">
-            {['artista', 'material', 'designacao', 'periodo'].map((field) => {
-              const value = attempt[field] || '';
-              const correct = checkCorrect(field, value);
+            {properties.map((field) => {
+              const value = attempt[field.property] || '';
+              const valueAsString = (!value || (Array.isArray(value) && value.length === 0)) ? '-' : value.join(", ");
+              const correct = checkCorrect(field.property, value);
+              const partiallyCorrect = checkPartiallyCorrect(field.property, value);
               return (
-                <div key={field} className={`attempt-square ${correct ? 'correct' : 'wrong'}`} title={`${field}: ${value}`}>
-                  {value || '-'}
+                <div key={field.property} className={`attempt-square ${correct ? 'correct' : (partiallyCorrect ? 'partially' : 'wrong')}`} title={`${field.label}: ${valueAsString}`}>
+                  {valueAsString}
                 </div>
               );
             })}
           </div>
         ))}
       </div>
-
-      {/* >>>>>>>>>>>>> NÃO ESTÁ CARREGANDO AS INFORMAÇÕES <<<<<<<<<<< */}
-      {classicArt && (
-        <div className="mural-container" style={{ maxWidth: '500px', marginTop: '1rem', fontSize: '0.9rem', background: '#eee' }}>
-          <h4>Respostas corretas (teste):</h4>
-          <p><strong>Artista:</strong> {classicArt.metadata?.artista?.value || '---'}</p>
-          <p><strong>Material:</strong> {classicArt.metadata?.material?.value || '---'}</p>
-          <p><strong>Designação:</strong> {classicArt.metadata?.designacao?.value || '---'}</p>
-          <p><strong>Período:</strong> {classicArt.metadata?.periodo?.value || '---'}</p>
-        </div>
-      )}
     </div>
   );
 };

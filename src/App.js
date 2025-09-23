@@ -9,16 +9,11 @@ import MuralGame from './components/MuralGame';
 import SculptureGame from './components/SculptureGame';
 import GuessLocation from './components/GuessLocation'; 
 import backgroundImage from './assets/background_image.png';
+import { fillPossibleValues } from './util/ClassicModeDataFetch';
 function App() {
-  const [classicArt, setClassicArt] = useState();
-  const [muralArt, setMuralArt] = useState();
-  const [sculptureArt, setSculptureArt] = useState();
-
-  useEffect(() => {
-    getTodaysClassicArt().then(setClassicArt);
-    getTodaysMuralArt().then(setMuralArt);
-    getTodaysSculptureArt().then(setSculptureArt);
-  }, []);
+  const [classicArt, setClassicArt] = useState(getTodaysClassicArt());
+  const [muralArt, setMuralArt] = useState(getTodaysMuralArt());
+  const [sculptureArt, setSculptureArt] = useState(getTodaysSculptureArt());
 
   return (
     <Router>
@@ -33,9 +28,9 @@ function App() {
         
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/classic" element={<ClassicGame classicArt={classicArt} />} />
-          <Route path="/mural" element={<MuralGame muralArt={muralArt} />} />
-          <Route path="/sculpture" element={<SculptureGame sculptureArt={sculptureArt} />} />
+          <Route path="/classic" element={<ClassicGame loadingArt={classicArt} />} />
+          <Route path="/mural" element={<MuralGame loadingArt={muralArt} />} />
+          <Route path="/sculpture" element={<SculptureGame loadingArt={sculptureArt} />} />
           <Route path="/map" element={<GuessLocation />} />
         </Routes>
       </div>
