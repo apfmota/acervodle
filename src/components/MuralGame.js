@@ -1,15 +1,15 @@
-// src/components/MuralGame.js
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaCheck } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
+import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaCheck, FaMapMarkerAlt } from 'react-icons/fa';
 
 const MuralGame = ({ loadingArt }) => {
 
   useEffect(() => {
     loadingArt.then(setMuralArt)
-  }, [])
+  }, [loadingArt])
 
   const [muralArt, setMuralArt] = useState();
+  const navigate = useNavigate();
 
   const [xPosition] = useState((Math.random() * 100) % 100);
   const [yPosition] = useState((Math.random() * 100) % 100);
@@ -37,6 +37,12 @@ const MuralGame = ({ loadingArt }) => {
         setAttempts([guess, ...attempts]);
         setGuess('');
       }
+    }
+  };
+
+  const handleGuessLocation = () => {
+    if (muralArt) {
+      navigate('/map', { state: { artObject: muralArt, artType: 'mural' } });
     }
   };
 
@@ -128,14 +134,13 @@ const MuralGame = ({ loadingArt }) => {
         </button>
       </form>
 
-      {/* Mensagem de sucesso quando o usuário acerta (agora com contador) */}
+      {/* Mensagem de sucesso quando o usuário acerta e botão para o mapa */}
       {hasWon && (
         <div>
           <div className="success-message" style={{ position: 'relative' }}>
             <FaCheck className="success-icon" />
             Parabéns! Você acertou o mural: {muralArt.title}
 
-            {/* contador de pessoas também na tentativa correta */}
             <div className="attempt-count">
               <span className="people-icon">👥</span>
               {Math.floor(Math.random() * 500) + 1}
@@ -143,6 +148,28 @@ const MuralGame = ({ loadingArt }) => {
                 O número de jogadores que também acertaram com essa tentativa!
               </div>
             </div>
+          </div>
+          
+          <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+            <button 
+              onClick={handleGuessLocation}
+              style={{
+                padding: '0.8rem 1.5rem',
+                backgroundColor: '#5D4037',
+                color: 'white',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontFamily: "'Cinzel', serif",
+                fontSize: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                margin: '0 auto'
+              }}
+            >
+              <FaMapMarkerAlt /> Adivinhar Localização
+            </button>
           </div>
         </div>
       )}
@@ -166,6 +193,7 @@ const MuralGame = ({ loadingArt }) => {
       {/* Informação sobre o mural de ontem */}
       <p className="yesterday-text">O mural de ontem foi: {yesterdayMural}</p>
 
+      {/* Modal de Tutorial */}
       {showTutorial && (
         <div className="tutorial-modal-overlay" onClick={() => setShowTutorial(false)}>
           <div className="tutorial-modal" onClick={(e) => e.stopPropagation()}>
