@@ -142,6 +142,7 @@ const ClassicGame = ({ loadingArt }) => {
     } else {
       newValue = [];
     }
+    newValue = newValue.filter(v => v !== "Nenhum");
     setCurrentValues(prev => ({
       ...prev,
       [property]: newValue

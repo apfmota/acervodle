@@ -36,7 +36,7 @@ const getPropertyValues = (art, property) => {
 export const getArtProperties = (art) => {
     const values = {}
     for (const property in propertiesOfInterest) {
-        let propertyValues = getPropertyValues(art, property).filter(validValue);
+        let propertyValues = getPropertyValues(art, property).filter(validValue).map(toTitleCase);
         if (property == "data-da-obra-2") {
             propertyValues = propertyValues.map(getDecade)
         }
@@ -66,4 +66,10 @@ const compare = (a, b) => {
 
 const validValue = (value) => {
     return typeof value == "string" && value.trim().length > 0 && value.trim() != "-" && value.toLowerCase() != "sem data"
+}
+
+const toTitleCase = (str) => {
+    return str.replace(/([^\s]+)/g, (txt) =>
+        txt.charAt(0).toLocaleUpperCase('pt-BR') + txt.slice(1).toLocaleLowerCase('pt-BR')
+    );
 }
