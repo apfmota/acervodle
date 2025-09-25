@@ -19,7 +19,7 @@ const ClassicGame = ({ loadingArt }) => {
   const randomPlayers = Math.floor(Math.random() * 1000) + 100;
   const yesterdayArt = "Obra " + (Math.floor(Math.random() * 10) + 1);
 
-  const [activeHints, setActiveHints] = useState([false, false, false]);
+  const [activeHint, setActiveHint] = useState(null);
 
   useEffect(() => {
     fillPossibleValues().then(() => setOptionsLoaded(true));
@@ -90,9 +90,7 @@ const ClassicGame = ({ loadingArt }) => {
 
   const handleHintClick = (hintIndex) => {
     if (hintsUnlocked[hintIndex]) {
-      const newActiveHints = [...activeHints];
-      newActiveHints[hintIndex] = !newActiveHints[hintIndex];
-      setActiveHints(newActiveHints);
+      setActiveHint(activeHint === hintIndex ? null : hintIndex);
     }
   };
 
@@ -202,7 +200,7 @@ const ClassicGame = ({ loadingArt }) => {
               className="hint-item"
             >
               <div 
-                className={`hint-icon ${hintsUnlocked[i] ? 'available' : 'locked'} ${activeHints[i] ? 'active' : ''}`}
+                className={`hint-icon ${hintsUnlocked[i] ? 'available' : 'locked'} ${activeHint === i ? 'active' : ''}`}
                 onClick={() => handleHintClick(i)}
                 style={{ cursor: hintsUnlocked[i] ? 'pointer' : 'default' }}
               >
@@ -210,32 +208,34 @@ const ClassicGame = ({ loadingArt }) => {
                 <div className="hint-tooltip">
                   <div>{hint} Dica</div>
                   {!hintsUnlocked[i] && <div>Disponível em {3 * (i + 1) - attempts.length} tentativas</div>}
-                  {hintsUnlocked[i] && !activeHints[i] && <div>Clique para revelar</div>}
-                  {hintsUnlocked[i] && activeHints[i] && <div>Clique para ocultar</div>}
+                  {hintsUnlocked[i] && activeHint !== i && <div>Clique para revelar</div>}
+                  {hintsUnlocked[i] && activeHint === i && <div>Clique para ocultar</div>}
                 </div>
               </div>
-              
-              {/* Dica revelada - aparece abaixo do ícone quando ativa */}
-              {activeHints[i] && (
-                <div className={`hint-revealed-box hint-${i}`}>
-                  <div className="hint-revealed-header">
-                    {hint} Dica Revelada
-                  </div>
-                  <div className="hint-revealed-content">
-                    {getHintProperties(i).map((prop, propIndex) => (
-                      <div key={propIndex} className="hint-revealed-property">
-                        <span className="property-label">{prop.label}:</span>
-                        <span className="property-value">
-                          {prop.value && prop.value.length > 0 ? prop.value.join(', ') : 'Desconhecida'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           ))}
         </div>
+
+        {/* Container único para a dica ativa - centralizado abaixo dos ícones */}
+        {activeHint !== null && (
+          <div className="hint-revealed-global-container">
+            <div className={`hint-revealed-box hint-${activeHint}`}>
+              <div className="hint-revealed-header">
+                {['Primeira', 'Segunda', 'Terceira'][activeHint]} Dica Revelada
+              </div>
+              <div className="hint-revealed-content">
+                {getHintProperties(activeHint).map((prop, propIndex) => (
+                  <div key={propIndex} className="hint-revealed-property">
+                    <span className="property-label">{prop.label}:</span>
+                    <span className="property-value">
+                      {prop.value && prop.value.length > 0 ? prop.value.join(', ') : 'Desconhecida'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Imagem - Aumentar espaçamento */}

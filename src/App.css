@@ -499,8 +499,10 @@ h1 {
 .hints-container {
   display: flex;
   justify-content: center;
-  gap: 1.5rem;
+  gap: 2rem;
   margin: 1rem 0;
+  flex-wrap: wrap;
+  position: relative;
 }
 
 .hint-icon {
@@ -1144,22 +1146,22 @@ h1 {
   border-color: #4caf50;
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
 }
-.hint-0 .hint-revealed-header { color: #2e7d32; }
-.hint-0 .property-value { color: #2e7d32; }
+.hint-0 .hint-revealed-header { color: #5D4037; }
+.hint-0 .property-value { color: #5D4037; }
 
 .hint-1 {
-  border-color: #2196f3;
+  border-color: #5D4037;
   background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
 }
-.hint-1 .hint-revealed-header { color: #1565c0; }
-.hint-1 .property-value { color: #1565c0; }
+.hint-1 .hint-revealed-header { color: #5D4037; }
+.hint-1 .property-value { color: #5D4037; }
 
 .hint-2 {
-  border-color: #9c27b0;
+  border-color: #5D4037;
   background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
 }
-.hint-2 .hint-revealed-header { color: #7b1fa2; }
-.hint-2 .property-value { color: #7b1fa2; }
+.hint-2 .hint-revealed-header { color: #5D4037; }
+.hint-2 .property-value { color: #5D4037; }
 
 /* Animação de entrada */
 @keyframes fadeIn {
@@ -1221,5 +1223,61 @@ h1 {
   .hint-item {
     width: 100%;
     max-width: 200px;
+  }
+}
+
+.hint-revealed-global-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+/* Ajuste para a dica revelada global */
+.hint-revealed-global-container .hint-revealed-box {
+  position: static;
+  transform: none;
+  margin: 0 auto;
+}
+
+/* Remova o posicionamento absoluto das dicas individuais */
+.hint-item .hint-revealed-box {
+  display: none; /* Esconde as dicas individuais */
+}
+
+/* Mantenha o estilo original das dicas reveladas */
+.hint-revealed-box {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border: 2px solid #ff9800;
+  border-radius: 8px;
+  padding: 0.8rem;
+  width: 200px;
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+  animation: fadeIn 0.3s ease-in;
+}
+
+.tutorial-modal ul {
+  text-align: left;
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.tutorial-modal li {
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.tutorial-highlight {
+  background-color: rgba(212, 184, 150, 0.3);
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  font-weight: bold;
+}
+
+/* Responsividade para conteúdo de texto */
+@media (max-width: 768px) {
+  .tutorial-text {
+    text-align: left !important;
+    font-size: 1rem;
   }
 }
