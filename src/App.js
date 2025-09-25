@@ -18,7 +18,6 @@ function App() {
   return (
     <Router>
       <div className="App">
-        {/* Adicione estilo inline com a imagem importada???? */}
         <div
           className="background-overlay"
           style={{
