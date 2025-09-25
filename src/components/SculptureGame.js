@@ -33,7 +33,7 @@ const SculptureGame = ({ loadingArt }) => {
   };
 
   const handleGuessLocation = () => {
-    navigate('/map', { state: { sculpture: sculptureArt } });
+    navigate('/map', { state: { artObject: sculptureArt, artType: 'sculpture' } });
   };
 
   return (
