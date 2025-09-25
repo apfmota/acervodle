@@ -22,6 +22,8 @@ const MuralGame = ({ loadingArt }) => {
   const randomPlayers = Math.floor(Math.random() * 1000) + 100;
   const yesterdayMural = "Painel " + (Math.floor(Math.random() * 10) + 1);
 
+  const [showTutorial, setShowTutorial] = useState(false);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (guess.trim() && muralArt) {
@@ -72,7 +74,7 @@ const MuralGame = ({ loadingArt }) => {
           <FaChartBar />
           <span className="tooltip">Estatísticas</span>
         </div>
-        <div className="utility-icon" style={{ cursor: 'pointer' }}>
+        <div className="utility-icon" style={{ cursor: 'pointer' }} onClick={() => setShowTutorial(true)}>
           <FaQuestion />
           <span className="tooltip">Como jogar?</span>
         </div>
@@ -163,6 +165,26 @@ const MuralGame = ({ loadingArt }) => {
 
       {/* Informação sobre o mural de ontem */}
       <p className="yesterday-text">O mural de ontem foi: {yesterdayMural}</p>
+
+      {showTutorial && (
+        <div className="tutorial-modal-overlay" onClick={() => setShowTutorial(false)}>
+          <div className="tutorial-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="tutorial-close" onClick={() => setShowTutorial(false)}>X</button>
+            
+            <h2 className="tutorial-title">Como jogar? (Modo Mural)</h2>
+            <hr className="tutorial-divider" />
+            
+            <p className="tutorial-text">
+              No modo Mural, seu desafio é identificar qual mural está representado na imagem mostrada e acertar o seu nome.
+            </p>
+            
+            <p className="tutorial-text">
+              A imagem começa com um <strong>zoom muito alto</strong>, mostrando apenas uma pequena parte do mural. 
+              A cada tentativa incorreta, o zoom será <strong>gradualmente reduzido</strong>, revelando mais partes do mural.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

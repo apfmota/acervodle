@@ -18,6 +18,8 @@ const SculptureGame = ({ loadingArt }) => {
   const randomPlayers = Math.floor(Math.random() * 1000) + 100;
   const yesterdaySculpture = "Escultura " + (Math.floor(Math.random() * 10) + 1);
 
+  const [showTutorial, setShowTutorial] = useState(false);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (guess.trim() && sculptureArt) {
@@ -70,7 +72,7 @@ const SculptureGame = ({ loadingArt }) => {
           <FaChartBar />
           <span className="tooltip">Estatísticas</span>
         </div>
-        <div className="utility-icon" style={{ cursor: 'pointer' }}>
+        <div className="utility-icon" style={{ cursor: 'pointer' }} onClick={() => setShowTutorial(true)}>
           <FaQuestion />
           <span className="tooltip">Como jogar?</span>
         </div>
@@ -180,6 +182,42 @@ const SculptureGame = ({ loadingArt }) => {
 
       {/* Informação sobre a escultura de ontem */}
       <p className="yesterday-text">A escultura de ontem foi: {yesterdaySculpture}</p>
+
+      {/* Modal de Tutorial para o Modo Escultura */}
+      {showTutorial && (
+        <div className="tutorial-modal-overlay" onClick={() => setShowTutorial(false)}>
+          <div className="tutorial-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="tutorial-close" onClick={() => setShowTutorial(false)}>X</button>
+            
+            <h2 className="tutorial-title">Como jogar?</h2>
+            <hr className="tutorial-divider" />
+            
+            <p className="tutorial-text">
+              No modo Escultura, seu desafio é identificar a escultura do dia a partir de sua <strong>imagem em silhueta</strong>.
+            </p>
+            
+            <p className="tutorial-text">
+              A escultura é mostrada como uma <strong>silhueta escura</strong> em uma fotografia. Você precisa 
+              reconhecer a obra pela sua <strong>forma, contorno e características estruturais</strong>.
+            </p>
+            
+            <h3 className="tutorial-subtitle">Fase Bônus: Localização</h3>
+            <hr className="tutorial-divider" />
+            
+            <p className="tutorial-text">
+              Após acertar a escultura, você desbloqueia uma <strong>fase bônus</strong>: adivinhar a 
+              localização da escultura dentro do campus da UFSM!
+            </p>
+            
+            <p className="tutorial-text">
+              Nesta fase adicional, você verá um <strong>mapa do campus</strong> com várias marcações. Sua missão 
+              é clicar no local correto onde a escultura está instalada.
+            </p>
+            
+            
+          </div>
+        </div>
+      )}
     </div>
   );
 };
