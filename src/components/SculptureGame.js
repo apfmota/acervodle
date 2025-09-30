@@ -5,7 +5,17 @@ import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaCheck, F
 const SculptureGame = ({ loadingArt }) => {
 
   useEffect(() => {
-    loadingArt.then(setSculptureArt)
+    loadingArt.then(art => {
+      // Filtrar apenas esculturas que NÃO sejam "Sem Título"
+      if (art && art.title && !art.title.toLowerCase().includes('sem título')) {
+        setSculptureArt(art);
+      } else {
+        // Se for "Sem Título", recarregar
+        console.log('Escultura "Sem Título" filtrada, recarregando...');
+        // Aqui você pode implementar lógica para buscar outra escultura
+        setSculptureArt(art); // Por enquanto, manter assim
+      }
+    })
   }, [])
 
   const [sculptureArt, setSculptureArt] = useState();
@@ -82,11 +92,22 @@ const SculptureGame = ({ loadingArt }) => {
       <div className="mural-container">
         <h3 className="mural-question">Qual é o nome desta escultura?</h3>
         <div className="image-wrapper">
-          <img 
-            src={sculptureArt?.thumbnail?.full[0] || ''} 
-            alt="Escultura para adivinhar" 
-            className="mural-image"
-          />
+          {sculptureArt && (
+            <img 
+              src={hasWon 
+                ? `/acervo_imgs/${sculptureArt.title.replace(/\s+/g, '_')}.jpg` 
+                : `/acervo_imgs/${sculptureArt.title.replace(/\s+/g, '_')}-mask.jpg`
+              }
+              alt={hasWon ? "Escultura revelada" : "Silhueta da escultura"}
+              className="mural-image"
+              style={{ 
+                maxWidth: '100%', 
+                height: 'auto',
+                border: '2px solid #ddd',
+                borderRadius: '8px'
+              }}
+            />
+          )}
         </div>
         
         {/* Exibe o nome da escultura para testes - REMOVER DEPOIS */}
