@@ -1,4 +1,4 @@
-import { getAllArts } from "../taincan/taincanAPI.js"
+import { getAllArts, getAllMurals, getAllSculptures } from "../taincan/taincanAPI.js"
 
 const propertiesOfInterest = {
     'material' : new Set(),
@@ -7,6 +7,26 @@ const propertiesOfInterest = {
     'tecnica-3': new Set(),
     'data-da-obra-2': new Set(),
     'tematica': new Set()
+}
+
+export const fillTitles = async (type) => {
+  const localTitles = new Set();
+  let allArts = [];
+  if(type == 'sculpture') 
+  {
+    allArts = await getAllSculptures();
+  }
+  else if(type == 'mural')
+  {
+    allArts = await getAllMurals();
+  }
+
+  for (const art of allArts) {
+    if (art.title && typeof art.title === "string" && art.title.trim().length > 0) {
+      localTitles.add(toTitleCase(art.title.trim()));
+    }
+  }
+  return Array.from(localTitles);
 }
 
 export const fillPossibleValues = async () => {

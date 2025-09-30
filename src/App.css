@@ -4,7 +4,6 @@
   position: relative;
   font-family: 'Cormorant Garamond', serif;
   color: #3A2E26;
-  overflow: hidden;
 }
 
 .background-overlay {
@@ -280,6 +279,11 @@ h1 {
   opacity: 0.7;
 }
 
+.guess-form .guess-input-select {
+  flex-grow: 1;
+  min-width: 0;
+}
+
 .guess-form {
   display: flex;
   justify-content: center;
@@ -297,7 +301,7 @@ h1 {
 }
 
 .guess-button {
-  padding: 0.8rem 1.5rem;
+  padding: 0.35rem 1.5rem;
   background-color: #5D4037;
   color: white;
   border: none;
