@@ -110,11 +110,23 @@ const SculptureGame = ({ loadingArt }) => {
       <div className="mural-container">
         <h3 className="mural-question">Qual é o nome desta escultura?</h3>
         <div className="image-wrapper">
-          <img
-            src={sculptureArt?.thumbnail?.full[0] || ''}
-            alt="Escultura para adivinhar"
-            className="mural-image"
-          />
+          {sculptureArt && (
+            <img 
+              src={hasWon 
+                ? `/acervo_imgs/${sculptureArt.title.replace(/\s+/g, '_')}.jpg` 
+                : `/acervo_imgs/${sculptureArt.title.replace(/\s+/g, '_')}-mask.jpg`
+              }
+              alt={hasWon ? "Escultura revelada" : "Silhueta da escultura"}
+              className="mural-image"
+              style={{ 
+                maxWidth: '100%', 
+                height: 'auto',
+                border: '2px solid #ddd',
+                borderRadius: '8px'
+              }}
+            />
+          )}
+          
         </div>
 
         {/* Exibir título para debug */}
