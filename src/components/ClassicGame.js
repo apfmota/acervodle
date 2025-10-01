@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaLightbulb } from 'react-icons/fa';
+import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaLightbulb, FaSpinner } from 'react-icons/fa';
 import Select from 'react-select';
 import { fillPossibleValues, getAllPossibleValues, getArtProperties } from '../util/ClassicModeDataFetch.js';
 import obraExemplo from '../assets/obra_exemplo.jpg';
@@ -252,6 +252,12 @@ const ClassicGame = ({ loadingArt }) => {
       </p>
 
       {/* Inputs - Grid mais espaçada e alinhada */}
+      {!optionsLoaded && (
+        <div>
+          <FaSpinner className='spinner'/>
+          Carregando opções de valores 
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="characteristics-form">
         <div className="characteristics-grid" style={{ gap: '1.5rem', marginBottom: '2rem' }}>
           {properties.map((field) => (
@@ -265,6 +271,7 @@ const ClassicGame = ({ loadingArt }) => {
                 options={getAllPossibleValues(field.property)}
                 isDisabled={lockedProperties[field.property]}
                 className={lockedProperties[field.property] ? 'locked-select' : ''}
+                isLoading={!optionsLoaded}
                 styles={{
                   container: (base) => ({
                     ...base,

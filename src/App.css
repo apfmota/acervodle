@@ -1285,3 +1285,18 @@ h1 {
     font-size: 1rem;
   }
 }
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  animation: spin 3s linear infinite;
+  vertical-align: sub;
+  margin-right: 5px;
+}
