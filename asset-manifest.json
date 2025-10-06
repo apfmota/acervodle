@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.css": "/acervodle/static/css/main.6e1aaddc.css",
+    "main.js": "/acervodle/static/js/main.543a3976.js",
+    "static/js/453.61dfa7aa.chunk.js": "/acervodle/static/js/453.61dfa7aa.chunk.js",
+    "static/media/background_image.png": "/acervodle/static/media/background_image.25f9cece7e37fb837e81.png",
+    "static/media/obra_exemplo.jpg": "/acervodle/static/media/obra_exemplo.26ad1b6b5f9910c03ee3.jpg",
+    "index.html": "/acervodle/index.html",
+    "main.6e1aaddc.css.map": "/acervodle/static/css/main.6e1aaddc.css.map",
+    "main.543a3976.js.map": "/acervodle/static/js/main.543a3976.js.map",
+    "453.61dfa7aa.chunk.js.map": "/acervodle/static/js/453.61dfa7aa.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.6e1aaddc.css",
+    "static/js/main.543a3976.js"
+  ]
+}
