@@ -260,7 +260,6 @@ h1 {
 
 .mural-image {
   width: 100%;
-  max-height: 400px;
   object-fit: cover;
   border-radius: 5px;
   border: 2px solid #5D4037;
@@ -1071,7 +1070,6 @@ h1 {
 
 .example-image {
   max-width: 100%;
-  max-height: 200px;
   border-radius: 5px;
   border: 2px solid #5D4037;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);

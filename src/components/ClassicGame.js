@@ -242,7 +242,7 @@ const ClassicGame = ({ loadingArt }) => {
       {/* Imagem - Aumentar espaçamento */}
       {classicArt && (
         <div className="mural-container" style={{ maxWidth: '500px', marginBottom: '2rem' }}>
-          <img src={classicArt.thumbnail?.full[0] || ''} alt="Obra" className="mural-image" style={{ maxHeight: '300px' }} />
+          <img src={classicArt.thumbnail?.full[0] || ''} alt="Obra" className="mural-image" />
         </div>
       )}
 
