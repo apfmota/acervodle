@@ -137,22 +137,6 @@ const MuralGame = ({ loadingArt }) => {
           }}
         ></div>
         <p className="mural-hint">A cada tentativa expande um pouco</p>
-
-        {/* Exibe o nome do mural para testes - REMOVER DEPOIS */}
-        {muralArt && (
-          <div
-            style={{
-              marginTop: '10px',
-              padding: '5px',
-              backgroundColor: '#f0f0f0',
-              borderRadius: '5px',
-              fontSize: '0.8rem',
-              color: '#666',
-            }}
-          >
-            TESTE: O mural sorteado é: {muralArt.title}
-          </div>
-        )}
       </div>
 
       {/* Texto de estatísticas */}

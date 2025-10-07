@@ -128,22 +128,6 @@ const SculptureGame = ({ loadingArt }) => {
           )}
           
         </div>
-
-        {/* Exibir título para debug */}
-        {sculptureArt && (
-          <div
-            style={{
-              marginTop: '10px',
-              padding: '5px',
-              backgroundColor: '#f0f0f0',
-              borderRadius: '5px',
-              fontSize: '0.8rem',
-              color: '#666',
-            }}
-          >
-            TESTE: A escultura sorteada é: {sculptureArt.title}
-          </div>
-        )}
       </div>
 
       {/* Estatísticas */}

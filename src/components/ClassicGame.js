@@ -62,6 +62,13 @@ const ClassicGame = ({ loadingArt }) => {
     return answer[property].some(v => value.includes(v));
   }
 
+  const partiallyCorrectTips = (property, value) => {
+    if (value == undefined) {
+      value = [];
+    }
+    return answer[property].filter(v => value.includes(v)).length + "/" + answer[property].length 
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!classicArt) return;
@@ -331,7 +338,35 @@ const ClassicGame = ({ loadingArt }) => {
                     wordBreak: 'break-word'
                   }}
                   title={`${field.label}: ${valueAsString}`}>
-                  {valueAsString}
+                  <div style={{
+                    width: '70%',
+                    wordBreak: 'break-word',
+                    overflowY: 'scroll',
+                    whiteSpace: 'normal',
+                    maxHeight: '50px'
+                  }}>
+                    {valueAsString}
+                  </div>
+                  {(!correct && partiallyCorrect) && (
+                    <div style={{
+                      fontWeight: 'bold',
+                      margin: '10px',
+                      backgroundColor: '#eed822',
+                      padding: '5px',
+                      borderRadius: '3px',
+                      color: '#4d4d36'
+                    }}>{partiallyCorrectTips(field.property, value)}</div>
+                  )}
+                  {field.property == "data-da-obra-2" && (
+                    <div>
+                      {value[0] > answer[field.property][0] && (
+                        <span style={{ marginLeft: '6px', color: '#2196f3', fontSize: '1.2em' }}>&darr;</span>
+                      )}
+                      {value[0] < answer[field.property][0] && (
+                        <span style={{ marginLeft: '6px', color: '#2196f3', fontSize: '1.2em' }}>&uarr;</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
