@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom'; // Adicionei Link
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { getAllSculptures, getAllMurals } from '../taincan/taincanAPI'; 
+
+// Adicionei os ícones
+import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion } from 'react-icons/fa';
 
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -26,6 +29,7 @@ const GuessLocationPage = () => {
   const [wrongGuesses, setWrongGuesses] = useState(new Set());
   const [isCorrectGuess, setIsCorrectGuess] = useState(false);
   const [mapBounds, setMapBounds] = useState(null);
+  const [showTutorial, setShowTutorial] = useState(false); // Adicionei estado para tutorial
 
   const artTypeName = artType === 'sculpture' ? 'localizada esta escultura' : 'localizado este mural';
   const pageTitle = `Onde está ${artTypeName}?`;
@@ -130,90 +134,158 @@ const GuessLocationPage = () => {
   if (loading) return <p>Carregando mapa...</p>;
 
   return (
-    <div>
-      <h2>{pageTitle}</h2>
-
-      {artObject?.thumbnail?.full[0] && (
-        <div style={{ textAlign: 'center', margin: '20px 0' }}>
-          <img
-            src={artObject.thumbnail.full[0]}
-            alt={`Arte a ser encontrada: ${artObject.title}`}
-            style={{
-              maxHeight: '200px',
-              borderRadius: '8px',
-              border: '3px solid #5D4037',
-            }}
-          />
+    <div className="game-page">
+      {/* Logo com link para home - IGUAL aos outros jogos */}
+      <Link to="/" className="logo-link">
+        <div className="title-box" style={{ transform: 'scale(0.8)', cursor: 'pointer' }}>
+          <h1>Acervodle</h1>
         </div>
-      )}
+      </Link>
 
-      <MapContainer
-        center={mapCenter}
-        maxBounds={mapBounds}
-        zoom={14}
-        minZoom={11}
-        style={{
-          height: '400px',
-          width: '600px',
-          margin: '0 auto',
-          display: 'block',
-        }}
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
+      {/* Ícones dos modos de jogo - IGUAL aos outros jogos */}
+      <div className="modes-icons">
+        <Link to="/classic" className="mode-icon-link">
+          <div className="icon-circle">
+            <FaPalette className="mode-icon" />
+          </div>
+        </Link>
+        <Link to="/mural" className="mode-icon-link">
+          <div className="icon-circle">
+            <FaPaintBrush className="mode-icon" />
+          </div>
+        </Link>
+        <Link to="/sculpture" className="mode-icon-link">
+          <div className="icon-circle">
+            <FaMonument className="mode-icon" />
+          </div>
+        </Link>
+      </div>
 
-        {artClusters
-          .filter(cluster => !cluster.items.every(item => 
-            wrongGuesses.has(item.metadata['numero-de-registro'].value)
-          ))
-          .map((cluster) => {
-            const clusterKey = `${cluster.center.lat}-${cluster.center.lng}`;
-            return (
-              <Marker
-                key={clusterKey}
-                position={[cluster.center.lat, cluster.center.lng]}
-                eventHandlers={{
-                  click: isCorrectGuess ? null : () => handleGuess(cluster.items),
-                }}
-              >
-                <Popup>
-                  <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
-                    <strong>Obras neste local:</strong>
-                    <ul style={{ paddingLeft: '20px', margin: '5px 0' }}>
-                      {cluster.items.map(item => (
-                        <li key={item.metadata['numero-de-registro'].value}>
-                          {item.title || 'Obra sem título'}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </Popup>
-              </Marker>
-            );
-          })}
-      </MapContainer>
-
-      {isCorrectGuess && (
+      {/* Ícones de estatísticas e tutorial - IGUAL aos outros jogos */}
+      <div className="utility-icons">
+        <div className="utility-icon" style={{ cursor: 'pointer' }}>
+          <FaChartBar />
+          <span className="tooltip">Estatísticas</span>
+        </div>
         <div
+          className="utility-icon"
+          style={{ cursor: 'pointer' }}
+          onClick={() => setShowTutorial(true)}
+        >
+          <FaQuestion />
+          <span className="tooltip">Como jogar?</span>
+        </div>
+      </div>
+
+      {/* Container principal do jogo de localização */}
+      <div className="mural-container" style={{ maxWidth: '800px', margin: '2rem auto' }}>
+        <h3 className="mural-question">{pageTitle}</h3>
+
+        {artObject?.thumbnail?.full[0] && (
+          <div style={{ textAlign: 'center', margin: '20px 0' }}>
+            <img
+              src={artObject.thumbnail.full[0]}
+              alt={`Arte a ser encontrada: ${artObject.title}`}
+              style={{
+                maxHeight: '200px',
+                borderRadius: '8px',
+                border: '3px solid #5D4037',
+              }}
+            />
+          </div>
+        )}
+
+        <MapContainer
+          center={mapCenter}
+          maxBounds={mapBounds}
+          zoom={14}
+          minZoom={11}
           style={{
-            textAlign: 'center',
-            marginTop: '20px',
-            padding: '10px',
-            backgroundColor: '#e8f5e9',
-            border: '1px solid #4caf50',
-            borderRadius: '5px',
+            height: '400px',
+            width: '100%',
+            margin: '0 auto',
+            display: 'block',
+            borderRadius: '8px',
+            border: '2px solid #5D4037'
           }}
         >
-          <h3 style={{ color: '#2e7d32' }}>🎉 Parabéns, você acertou!</h3>
-          <p>
-            Este é o {artTypeName.replace('localizada esta', ' ').replace('localizado este', ' ')} "{artObject.title}".
-          </p>
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          />
+
+          {artClusters
+            .filter(cluster => !cluster.items.every(item => 
+              wrongGuesses.has(item.metadata['numero-de-registro'].value)
+            ))
+            .map((cluster) => {
+              const clusterKey = `${cluster.center.lat}-${cluster.center.lng}`;
+              return (
+                <Marker
+                  key={clusterKey}
+                  position={[cluster.center.lat, cluster.center.lng]}
+                  eventHandlers={{
+                    click: isCorrectGuess ? null : () => handleGuess(cluster.items),
+                  }}
+                >
+                  <Popup>
+                    <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                      <strong>Obras neste local:</strong>
+                      <ul style={{ paddingLeft: '20px', margin: '5px 0' }}>
+                        {cluster.items.map(item => (
+                          <li key={item.metadata['numero-de-registro'].value}>
+                            {item.title || 'Obra sem título'}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
+        </MapContainer>
+
+        {isCorrectGuess && (
+          <div
+            style={{
+              textAlign: 'center',
+              marginTop: '20px',
+              padding: '15px',
+              backgroundColor: '#e8f5e9',
+              border: '2px solid #4caf50',
+              borderRadius: '8px',
+              color: '#2e7d32',
+              fontWeight: 'bold'
+            }}
+          >
+            <h3 style={{ color: '#2e7d32', margin: '0 0 10px 0' }}>🎉 Parabéns, você acertou!</h3>
+            <p style={{ margin: 0 }}>
+               "{artObject.title}".
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Modal de Tutorial - similar aos outros jogos */}
+      {showTutorial && (
+        <div className="tutorial-modal-overlay" onClick={() => setShowTutorial(false)}>
+          <div className="tutorial-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="tutorial-close" onClick={() => setShowTutorial(false)}>X</button>
+            <h2 className="tutorial-title">Como jogar?</h2>
+            <hr className="tutorial-divider" />
+            <p className="tutorial-text">
+              Nesta fase bônus, seu desafio é encontrar a localização correta da obra no mapa do campus da UFSM.
+            </p>
+            <p className="tutorial-text">
+              O mapa mostra vários marcadores que representam a localização dessas obras espalhadas na UFSM. Clique no marcador que você acredita
+              ser a localização correta da obra adivinhada.
+            </p>
+            <p className="tutorial-text">
+              Se você clicar no local errado, o marcador correspondente desaparecerá.
+            </p>
+          </div>
         </div>
       )}
-
-      <button onClick={() => navigate('/')}>Voltar ao Início</button>
     </div>
   );
 };
