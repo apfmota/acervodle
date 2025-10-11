@@ -1,5 +1,5 @@
 import seedrandom from "seedrandom";
-import { countElements, countSculptures, countMurals, getArtData, MURALS_METAQUERY, SCULPTURES_METAQUERY } from "../taincan/taincanAPI.js";
+import { countElements, countSculptures, countMurals, getArtData, MURALS_METAQUERY, SCULPTURES_METAQUERY, NO_TITLE_FILTER_METAQUERY } from "../taincan/taincanAPI.js";
 
 
 //retorna o indice da obra de hoje a partir do número de obras totais
@@ -22,12 +22,12 @@ export const getTodaysClassicArt = async () => {
 export const getTodaysMuralArt = async () => {
     const n = await countMurals();
     const artIndex = getDailyArtIndex(n, "Mural");
-    return await getArtData(artIndex, MURALS_METAQUERY)
+    return await getArtData(artIndex, MURALS_METAQUERY + "&" + NO_TITLE_FILTER_METAQUERY)
 };
 
 export const getTodaysSculptureArt = async () => {
     const n = await countSculptures();
     const artIndex = getDailyArtIndex(n, "Escultura");
-    return await getArtData(artIndex, SCULPTURES_METAQUERY)
+    return await getArtData(artIndex, SCULPTURES_METAQUERY + "&" + NO_TITLE_FILTER_METAQUERY)
 };
 export default getDailyArtIndex;
