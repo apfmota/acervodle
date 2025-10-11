@@ -182,7 +182,7 @@ const MuralGame = ({ loadingArt }) => {
               onClick={handleGuessLocation}
               style={{
                 padding: '0.8rem 1.5rem',
-                backgroundColor: '#5D4037',
+                backgroundColor: '#005285',
                 color: 'white',
                 border: 'none',
                 borderRadius: '5px',

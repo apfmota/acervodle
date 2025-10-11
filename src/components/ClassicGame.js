@@ -351,10 +351,10 @@ const ClassicGame = ({ loadingArt }) => {
                     <div style={{
                       fontWeight: 'bold',
                       margin: '10px',
-                      backgroundColor: '#eed822',
+                      backgroundColor: '#ff8800ff',
                       padding: '5px',
                       borderRadius: '3px',
-                      color: '#4d4d36'
+                      color: '#000000ff'
                     }}>{partiallyCorrectTips(field.property, value)}</div>
                   )}
                   {field.property == "data-da-obra-2" && (
@@ -388,28 +388,28 @@ const ClassicGame = ({ loadingArt }) => {
           <h2 className="tutorial-title">Como jogar?</h2>
           <hr className="tutorial-divider" />
           
-          <p className="tutorial-text">
-            Adivinhe a obra do dia sorteado do banco de dados do Acervo Artístico da UFSM.
-            Muda a cada 24 horas.
+          <p className="tutorial-text" style={{ textAlign: 'left'}}>
+            Adivinhe as características da obra do Acervo Artístico da UFSM do dia de hoje.
+            A obra sorteada do banco de dados do acordo muda a cada 24 horas.
           </p>
           
-          <p className="tutorial-text">
-            No modo clássico, basta selecionar as características da obra para revelar suas propriedades.
-            A cor dos quadrados mudará para mostrar quão perto você estava de acertar a obra.
+          <p className="tutorial-text" style={{ textAlign: 'left'}}>
+            Escolha as características da obra para revelar suas caracterísiticas.
+            A cor dos quadrados indica se você acertou ou não a caracterísitica.
           </p>
           
           <div className="tutorial-colors">
             <div className="color-example">
               <div className="color-box correct-example"></div>
-              <span className="color-text" style={{color: '#4caf50'}}>Verde: acertou exatamente a propriedade.</span>
+              <span className="color-text" style={{color: '#4caf50'}}>Verde: acertou exatamente a caracterísitica.</span>
             </div>
             <div className="color-example">
               <div className="color-box partially-example"></div>
-              <span className="color-text" style={{color: '#a3af61'}}>Laranja: indica que acertou parcialmente.</span>
+              <span className="color-text" style={{color: '#EE7D00'}}>Laranja: acertou parcialmente a caracterísitica.</span>
             </div>
             <div className="color-example">
               <div className="color-box wrong-example"></div>
-              <span className="color-text" style={{color: '#c62828'}}>Vermelho: indica que não há relação entre seu palpite e a propriedade correta.</span>
+              <span className="color-text" style={{color: '#c62828'}}>Vermelho: errou completamente a caracterísitica.</span>
             </div>
           </div>
           
@@ -418,48 +418,47 @@ const ClassicGame = ({ loadingArt }) => {
           
           <div className="properties-list" style={{ textAlign: 'left' }}>
             <div className="property-item">
-              <strong>Material:</strong> Tipo de material utilizado para confecção da obra.
+              <span style={{ color: '#005285', fontWeight: 'bold' }}>Material:</span> Tipo de material utilizado para confecção da obra.
             </div>
             <div className="property-item">
-              <strong>Técnica:</strong> Método ou processo utilizado na criação da obra.
+              <span style={{ color: '#005285', fontWeight: 'bold' }}>Técnica:</span> Método ou processo utilizado na criação da obra.
             </div>
             <div className="property-item">
-              <strong>Moldura:</strong> Tipo de moldura que envolve a obra, se aplicável.
+              <span style={{ color: '#005285', fontWeight: 'bold' }}>Moldura:</span> Tipo de moldura que envolve a obra, se aplicável.
             </div>
             <div className="property-item">
-              <strong>Suporte:</strong> Superfície ou base sobre a qual a obra foi executada.
+              <span style={{ color: '#005285', fontWeight: 'bold' }}>Suporte:</span> Superfície ou base sobre a qual a obra foi executada.
             </div>
             <div className="property-item">
-              <strong>Década:</strong> Período de dez anos em que a obra foi criada.
+              <span style={{ color: '#005285', fontWeight: 'bold' }}>Década:</span> Período de dez anos em que a obra foi criada.
             </div>
             <div className="property-item">
-              <strong>Temática:</strong> Assunto ou tema principal representado na obra.
+              <span style={{ color: '#005285', fontWeight: 'bold' }}>Temática:</span> Assunto ou tema principal representado na obra.
             </div>
           </div>
           
           <p className="tutorial-note" style={{ textAlign: 'left', fontStyle: 'italic', marginTop: '1rem' }}>
-            Observação: Há algumas características desconhecidas de algumas obras, portanto elas serão desde o princípio consideradas acertadas pelo usuário.
+            <span style={{ fontWeight: 'bold' }}>  Há algumas características desconhecidas de algumas obras, portanto elas serão desde o princípio consideradas acertadas pelo usuário. </span>
           </p>
           
           <h3 className="tutorial-subtitle">Dicas</h3>
           <hr className="tutorial-divider" />
           
-          <p className="tutorial-text">
-            Para o ajudar a encontrar a obra, é possível receber uma nova dica a cada 3 tentativas. 
-            Cada dica revela uma característica aleatória faltante.
+          <p className="tutorial-text" style={{ textAlign: 'left'}}>
+            Recebe-se uma dica a cada 3 tentativas incorretas. 
+            Cada dica revela caracterísiticas específicas da obra.
           </p>
           
           <h3 className="tutorial-subtitle">Exemplo</h3>
           <hr className="tutorial-divider" />
           
-          <p className="tutorial-text">
+          <p className="tutorial-text" style={{ textAlign: 'left'}}>
             Nesse exemplo, o jogador acertou duas caracterísiticas (Técnica e Moldura), errou outras duas (Material e Suporte),
             e acertou parcialmente a característica Temática - a obra em questão possui duas temáticas. A característica Década é desconhecida, então é considerada como acertada.
           </p>
 
           <div className="example-image-container">
             <img src={obraExemplo} alt="Obra de exemplo" className="example-image" />
-            <p className="example-image-caption">Obra exemplo: "Paisagem Urbana" por Artista Fictício</p>
           </div>
           
           <div className="tutorial-example">
@@ -485,15 +484,15 @@ const ClassicGame = ({ loadingArt }) => {
             <div className="example-explanation">
               <div className="explanation-item">
                 <span className="color-dot correct"></span>
-                <span><strong>Verde (Técnica, Moldura):</strong> Acertou exatamente as propriedades</span>
+                <span> Acertou a caracterísitica</span>
               </div>
               <div className="explanation-item">
                 <span className="color-dot wrong"></span>
-                <span><strong>Vermelho (Material, Suporte):</strong> Não há relação com as propriedades corretas</span>
+                <span> Errou a caracterísitica</span>
               </div>
               <div className="explanation-item">
                 <span className="color-dot partially"></span>
-                <span><strong>Laranja (Década):</strong> Acertou parcialmente (a década correta é "Anos 60-70")</span>
+                <span> Acertou parcialmente a caracterísitica - a obra possui duas temáticas</span>
               </div>
             </div>
           </div>

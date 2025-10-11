@@ -38,14 +38,14 @@ const Home = () => {
                 position: 'absolute',
                 top: '15px',
                 right: '15px',
-                background: '#D4B896',
-                border: '2px solid #3A2E26',
+                background: '#E8F1F8',
+                border: '2px solid #1A1A1A',
                 borderRadius: '50%',
                 width: '30px',
                 height: '30px',
                 cursor: 'pointer',
                 fontWeight: 'bold',
-                color: '#3A2E26',
+                color: '#1A1A1A',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -74,7 +74,7 @@ const Home = () => {
             <p className="tutorial-text" style={{ 
               textAlign: 'center', 
               fontStyle: 'italic',
-              color: '#D4B896',
+              color: '#E8F1F8',
               marginBottom: '0'
             }}>
               Obrigado pela compreensão!
@@ -85,7 +85,7 @@ const Home = () => {
               style={{
                 marginTop: '1.5rem',
                 padding: '0.8rem 2rem',
-                backgroundColor: '#5D4037',
+                backgroundColor: '#005285',
                 color: 'white',
                 border: 'none',
                 borderRadius: '5px',
@@ -118,14 +118,14 @@ const Home = () => {
         <Link to="/mural" className="mode-link">
           <div className="mode-card">
             <h2>Modo Mural</h2>
-            <p>Desubra qual o mural pela foto. A cada tentativa o zoom é reduzido.</p>
+            <p>Desubra qual o nome do mural pela foto. A cada tentativa o zoom é reduzido.</p>
           </div>
         </Link>
 
         <Link to="/sculpture" className="mode-link">
           <div className="mode-card">
             <h2>Modo Escultura</h2>
-            <p>Adivinhe qual a escultura do dia a partir da sua silhueta.</p>
+            <p>Adivinhe qual o nome da escultura do dia a partir da sua silhueta.</p>
           </div>
         </Link>
       </div>
