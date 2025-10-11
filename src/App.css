@@ -36,7 +36,7 @@
 }
 
 .content-wrapper {
-  min-height: calc(100vh - 180px); /* Espaço para o footer */
+  min-height: calc(100vh - 180px);
   position: relative;
 }
 
