@@ -25,7 +25,8 @@ export const getFetchParameters = async () => {
 const countCache = {};
 export const countElements = async (limitDate, metaqueryParams = "") => {
     limitDate.setHours(23, 59, 59, 999);
-    if (countCache[metaqueryParams]) {
+    const cacheKey = limitDate.getTime() + "_" + metaqueryParams;
+    if (countCache[cacheKey]) {
         return countCache[metaqueryParams];
     }
     let count = 0;
@@ -42,14 +43,13 @@ export const countElements = async (limitDate, metaqueryParams = "") => {
                 count++;
                 itemsCurrentPage++;
             } else {
-                countCache[metaqueryParams] = count;
+                countCache[cacheKey] = count;
                 return count;
             }
         }
         page += 1;
     } while (itemsCurrentPage != 0);
-    countCache[metaqueryParams] = count;
-    console.log(count, metaqueryParams)
+    countCache[cacheKey] = count;
     return count;
 }
 
