@@ -11,14 +11,16 @@ import {
 } from 'react-icons/fa';
 import { titleSet, fillTitles } from '../util/ClassicModeDataFetch';
 import Select from 'react-select';
+import { getMuralArtByDate } from '../util/DailyArt';
+import DatePicker from './DatePicker';
 
 const MuralGame = ({ loadingArt }) => {
   const [muralArt, setMuralArt] = useState();
   const [allMuralTitles, setAllMuralTitles] = useState([]);
   const navigate = useNavigate();
 
-  const [xPosition] = useState((Math.random() * 100) % 100);
-  const [yPosition] = useState((Math.random() * 100) % 100);
+  const [xPosition, setXPosition] = useState((Math.random() * 100) % 100);
+  const [yPosition, setYPosition] = useState((Math.random() * 100) % 100);
   const [zoom, setZoom] = useState(800);
   const [guess, setGuess] = useState('');
   const [attempts, setAttempts] = useState([]);
@@ -26,7 +28,6 @@ const MuralGame = ({ loadingArt }) => {
 
   // Números aleatórios para os placeholders
   const randomPlayers = Math.floor(Math.random() * 1000) + 100;
-  const yesterdayMural = 'Painel ' + (Math.floor(Math.random() * 10) + 1);
 
   const [showTutorial, setShowTutorial] = useState(false);
 
@@ -40,6 +41,18 @@ const MuralGame = ({ loadingArt }) => {
 
     loadTitles();
   }, []);
+
+  const changeDate = (date) => {
+    getMuralArtByDate(date).then(art => {
+      setMuralArt(art);
+      setGuess("");
+      setAttempts([]);
+      setZoom(800);
+      setXPosition((Math.random() * 100) % 100);
+      setYPosition((Math.random() * 100) % 100);
+      setHasWon(false);
+    })
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -122,6 +135,8 @@ const MuralGame = ({ loadingArt }) => {
           <span className="tooltip">Como jogar?</span>
         </div>
       </div>
+
+      <DatePicker onClick={changeDate}/>
 
       {/* Área da imagem do mural */}
       <div className="mural-container">
@@ -220,9 +235,6 @@ const MuralGame = ({ loadingArt }) => {
           </div>
         ))}
       </div>
-
-      {/* Informação sobre o mural de ontem */}
-      <p className="yesterday-text">O mural de ontem foi: {yesterdayMural}</p>
 
       {/* Modal de Tutorial */}
       {showTutorial && (

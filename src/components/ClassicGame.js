@@ -4,6 +4,8 @@ import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaLightbul
 import Select from 'react-select';
 import { fillPossibleValues, getAllPossibleValues, getArtProperties } from '../util/ClassicModeDataFetch.js';
 import obraExemplo from '../assets/obra_exemplo.jpg';
+import DatePicker from './DatePicker.js';
+import { getClassicArtByDate } from '../util/DailyArt.js';
 
 const ClassicGame = ({ loadingArt }) => {
   const [classicArt, setClassicArt] = useState();
@@ -37,6 +39,27 @@ const ClassicGame = ({ loadingArt }) => {
       setLockedProperties(initialLocked);
     }); 
   }, [])
+
+  const changeDate = (date) => {
+    getClassicArtByDate(date).then(art => {
+      setClassicArt(art);
+      const answerProperties = getArtProperties(art);
+      setAnswer(answerProperties);
+
+      // Inicializar propriedades bloqueadas para características faltantes
+      const initialLocked = {};
+      Object.keys(answerProperties).forEach(prop => {
+        if (answerProperties[prop].length === 0) {
+          initialLocked[prop] = true;
+        }
+      });
+      setLockedProperties(initialLocked);
+      setCurrentValues({});
+      setAttempts([]);
+      setHintsUnlocked([[false, false, false]]);
+      setHasWon(false);
+    })
+  }
 
   const properties = [
     {label: 'Técnica', property: 'tecnica-3'},
@@ -244,6 +267,8 @@ const ClassicGame = ({ loadingArt }) => {
           </div>
         )}
       </div>
+
+      <DatePicker onClick={changeDate}/>
 
       {/* Imagem - Aumentar espaçamento */}
       {classicArt && (

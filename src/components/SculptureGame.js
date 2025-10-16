@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaCheck, FaMapMarkerAlt } from 'react-icons/fa';
 import { titleSet, fillTitles } from '../util/ClassicModeDataFetch';
 import Select from 'react-select';
+import { getSculptureArtByDate } from '../util/DailyArt';
+import DatePicker from './DatePicker';
 
 const SculptureGame = ({ loadingArt }) => {
   const [sculptureArt, setSculptureArt] = useState();
@@ -27,6 +29,15 @@ const SculptureGame = ({ loadingArt }) => {
 
     loadTitles();
   }, []);
+
+  const changeDate = (date) => {
+    getSculptureArtByDate(date).then(art => {
+      setSculptureArt(art);
+      setAttempts([]);
+      setGuess("");
+      setHasWon(false);
+    })
+  }
 
   const selectOptions = useMemo(
     () =>
@@ -105,6 +116,8 @@ const SculptureGame = ({ loadingArt }) => {
           <span className="tooltip">Como jogar?</span>
         </div>
       </div>
+
+      <DatePicker onClick={changeDate}/>
 
       {/* Área da imagem */}
       <div className="mural-container">

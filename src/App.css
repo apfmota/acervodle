@@ -1559,3 +1559,25 @@ h1 {
     text-align: left;
   }
 }
+
+.datePicker {
+  direction: rtl;
+  display: flex;
+  overflow-x: auto;
+  flex-direction: row;
+  width: 500px;
+  margin: auto;
+}
+
+.datePicker > div {
+  padding: 10px;
+  background-color: #005285;
+  border-radius: 5px;
+  margin: 10px;
+  color: white;
+  cursor: pointer;
+}
+
+.datePicker > div.selected {
+  background-color:#003A5C;
+}
