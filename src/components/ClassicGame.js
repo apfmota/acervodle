@@ -17,7 +17,6 @@ const ClassicGame = ({ loadingArt }) => {
   const [showTutorial, setShowTutorial] = useState(false);
 
   const randomPlayers = Math.floor(Math.random() * 1000) + 100;
-  const yesterdayArt = "Obra " + (Math.floor(Math.random() * 10) + 1);
 
   const [activeHint, setActiveHint] = useState(null);
 
@@ -373,11 +372,6 @@ const ClassicGame = ({ loadingArt }) => {
           </div>
         ))}
       </div>
-
-      {/* Informação sobre a obra de ontem - após todas as tentativas */}
-      <p className="yesterday-text" style={{ textAlign: 'center', marginTop: '2rem' }}>
-        A obra de ontem foi: {yesterdayArt}
-      </p>
 
       {/* Modal de Tutorial */}
       {showTutorial && (

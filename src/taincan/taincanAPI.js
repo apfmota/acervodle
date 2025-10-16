@@ -6,6 +6,8 @@ export const SCULPTURES_METAQUERY = "metaquery[0][key]=2200&metaquery[0][compare
 
 export const NO_TITLE_FILTER_METAQUERY = "metaquery[1][key]=2177&metaquery[1][compare]=!=&metaquery[1][value]=Sem Título"
 
+export const ORDER_PARAMS = "order=ASC&orderby=date";
+
 var cachedMetadata = []
 export const getCollectionMetadata = async () => {
     if (cachedMetadata.length == 0) {
@@ -21,30 +23,42 @@ export const getFetchParameters = async () => {
 }
 
 const countCache = {};
-export const countElements = async (metaqueryParams = "") => {
+export const countElements = async (limitDate, metaqueryParams = "") => {
+    limitDate.setHours(23, 59, 59, 999);
     if (countCache[metaqueryParams]) {
         return countCache[metaqueryParams];
     }
     let count = 0;
     let page = 1;
-    const perpage = 100;
+    const perpage = 50;
     let itemsCurrentPage = 0;
     do {
-        const request = await fetch(COLLECTION_URL + `/items?perpage=${perpage}&paged=${page}&${metaqueryParams}&fetch_only=status`);
-        itemsCurrentPage = (await request.json()).items.length;
-        count += itemsCurrentPage;
+        const request = await fetch(COLLECTION_URL + `/items?perpage=${perpage}&paged=${page}&${metaqueryParams}&fetch_only=status,creation_date&${ORDER_PARAMS}`);
+        const items = (await request.json()).items;
+        itemsCurrentPage = 0;
+        for (const item of items) {
+            const itemCreationDate = new Date(item.creation_date);
+            if (itemCreationDate <= limitDate.getTime()) {
+                count++;
+                itemsCurrentPage++;
+            } else {
+                countCache[metaqueryParams] = count;
+                return count;
+            }
+        }
         page += 1;
     } while (itemsCurrentPage != 0);
     countCache[metaqueryParams] = count;
+    console.log(count, metaqueryParams)
     return count;
 }
 
-export const countMurals = async () => {
-    return await countElements(MURALS_METAQUERY + "&" + NO_TITLE_FILTER_METAQUERY);
+export const countMurals = async (limitDate) => {
+    return await countElements(limitDate, MURALS_METAQUERY + "&" + NO_TITLE_FILTER_METAQUERY);
 }
 
-export const countSculptures = async () => {
-    return await countElements(SCULPTURES_METAQUERY + "&" + NO_TITLE_FILTER_METAQUERY);
+export const countSculptures = async (limitDate) => {
+    return await countElements(limitDate, SCULPTURES_METAQUERY + "&" + NO_TITLE_FILTER_METAQUERY);
 }
 
 const elementsCache = {};
@@ -86,7 +100,7 @@ export const getArtData = async (index, metaquery = "") => {
         return artDataCache[cacheKey];
     }
     try {
-        const url = `${API_URL}/collection/2174/items?perpage=1&paged=${index + 1}&${metaquery}&${await getFetchParameters()}`;
+        const url = `${API_URL}/collection/2174/items?perpage=1&paged=${index + 1}&${metaquery}&${await getFetchParameters()}&${ORDER_PARAMS}`;
         const response = await fetch(url);
         const data = await response.json();
         const item = data.items[0];

@@ -3,31 +3,42 @@ import { countElements, countSculptures, countMurals, getArtData, MURALS_METAQUE
 
 
 //retorna o indice da obra de hoje a partir do número de obras totais
-const getDailyArtIndex = (artsNumber, gameMode) => {
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-    const seed = (today.getTime() / 1000 / 60 / 60 / 24) + gameMode;
+const getDailyArtIndex = (artsNumber, gameMode, date) => {
+    date.setHours(0, 0, 0, 0);
+    const seed = date.getTime() + gameMode;
     const getRandom = seedrandom(seed)
     return parseInt(getRandom() * Math.pow(10, parseInt(Math.log10(artsNumber) + 1))) % artsNumber; 
 }
 
-export const getTodaysClassicArt = async () => {
-    const n = await countElements();
-    const artIndex = getDailyArtIndex(n, "Clássico");
+export const getClassicArtByDate = async (date) => {
+    const n = await countElements(date);
+    const artIndex = getDailyArtIndex(n, "Clássico", date);
     const artData = await getArtData(artIndex);
-    console.log("Today's classic art data:", artData);
     return artData;
 };
 
-export const getTodaysMuralArt = async () => {
-    const n = await countMurals();
-    const artIndex = getDailyArtIndex(n, "Mural");
+export const getTodaysClassicArt = async () => {
+    return await getClassicArtByDate(new Date());
+}
+
+export const getMuralArtByDate = async (date) => {
+    const n = await countMurals(date);
+    const artIndex = getDailyArtIndex(n, "Mural", date);
     return await getArtData(artIndex, MURALS_METAQUERY + "&" + NO_TITLE_FILTER_METAQUERY)
 };
 
-export const getTodaysSculptureArt = async () => {
-    const n = await countSculptures();
-    const artIndex = getDailyArtIndex(n, "Escultura");
+export const getTodaysMuralArt = async () => {
+    return await getMuralArtByDate(new Date());
+}
+
+export const getSculptureArtByDate = async (date) => {
+    const n = await countSculptures(date);
+    const artIndex = getDailyArtIndex(n, "Escultura", date);
     return await getArtData(artIndex, SCULPTURES_METAQUERY + "&" + NO_TITLE_FILTER_METAQUERY)
 };
+
+export const getTodaysSculptureArt = async () => {
+    return await getSculptureArtByDate(new Date())
+}
+
 export default getDailyArtIndex;
