@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaLightbulb, FaSpinner } from 'react-icons/fa';
+import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaLightbulb, FaSpinner, FaCalendarAlt } from 'react-icons/fa'; 
 import Select from 'react-select';
 import { fillPossibleValues, getAllPossibleValues, getArtProperties } from '../util/ClassicModeDataFetch.js';
 import obraExemplo from '../assets/obra_exemplo.jpg';
-import DatePicker from './DatePicker.js';
 import { getClassicArtByDate } from '../util/DailyArt.js';
+import { todayMidnight } from './DatePicker.js'; 
+import CalendarModal from './CalendarModal.js'; 
+import VictoryAnimation from './VictoryAnimation'; // 1. IMPORTAR A ANIMAÇÃO
 
 const ClassicGame = ({ loadingArt }) => {
   const [classicArt, setClassicArt] = useState();
@@ -17,6 +19,11 @@ const ClassicGame = ({ loadingArt }) => {
   const [hintsUnlocked, setHintsUnlocked] = useState([false, false, false]);
   const [answer, setAnswer] = useState({});
   const [showTutorial, setShowTutorial] = useState(false);
+  
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [currentDate, setCurrentDate] = useState(todayMidnight());
+
+  const [showVictory, setShowVictory] = useState(false); // 2. ADICIONAR ESTADO DE VITÓRIA
 
   const randomPlayers = Math.floor(Math.random() * 1000) + 100;
 
@@ -25,40 +32,68 @@ const ClassicGame = ({ loadingArt }) => {
   useEffect(() => {
     fillPossibleValues().then(() => setOptionsLoaded(true));
     loadingArt.then((art) => {
-      setClassicArt(art);
-      const answerProperties = getArtProperties(art);
-      setAnswer(answerProperties);
       
-      // Inicializar propriedades bloqueadas para características faltantes
-      const initialLocked = {};
-      Object.keys(answerProperties).forEach(prop => {
-        if (answerProperties[prop].length === 0) {
-          initialLocked[prop] = true;
-        }
-      });
-      setLockedProperties(initialLocked);
+      if (art) {
+        setClassicArt(art);
+        const answerProperties = getArtProperties(art);
+        setAnswer(answerProperties);
+        
+        const initialLocked = {};
+        Object.keys(answerProperties).forEach(prop => {
+          if (answerProperties[prop].length === 0) {
+            initialLocked[prop] = true;
+          }
+        });
+        setLockedProperties(initialLocked);
+      } else {
+        setClassicArt(null);
+        setAnswer({});
+        setLockedProperties({});
+      }
     }); 
-  }, [])
+  }, [loadingArt]) 
+
+  // 3. ADICIONAR USEEFFECT PARA OBSERVAR 'hasWon'
+  useEffect(() => {
+    if (hasWon) {
+      // Ativa a animação apenas na transição para 'venceu'
+      setShowVictory(true);
+    }
+  }, [hasWon]);
 
   const changeDate = (date) => {
     getClassicArtByDate(date).then(art => {
-      setClassicArt(art);
-      const answerProperties = getArtProperties(art);
-      setAnswer(answerProperties);
 
-      // Inicializar propriedades bloqueadas para características faltantes
-      const initialLocked = {};
-      Object.keys(answerProperties).forEach(prop => {
-        if (answerProperties[prop].length === 0) {
-          initialLocked[prop] = true;
-        }
-      });
-      setLockedProperties(initialLocked);
-      setCurrentValues({});
-      setAttempts([]);
-      setHintsUnlocked([[false, false, false]]);
-      setHasWon(false);
-    })
+      if (art) {
+        setClassicArt(art);
+        const answerProperties = getArtProperties(art);
+        setAnswer(answerProperties);
+
+        const initialLocked = {};
+        Object.keys(answerProperties).forEach(prop => {
+          if (answerProperties[prop].length === 0) {
+            initialLocked[prop] = true;
+          }
+        });
+        setLockedProperties(initialLocked);
+        setCurrentValues({});
+        setAttempts([]);
+        setHintsUnlocked([false, false, false]); 
+        setHasWon(false);
+        setShowVictory(false); // 4. RESETAR A ANIMAÇÃO AO MUDAR A DATA
+      } else {
+        setClassicArt(null);
+        setAnswer({});
+        setLockedProperties({});
+        setCurrentValues({});
+        setAttempts([]);
+        setHintsUnlocked([false, false, false]);
+        setHasWon(false);
+        setShowVictory(false); // 4. RESETAR A ANIMAÇÃO
+      }
+    });
+    setCurrentDate(date); 
+    setShowCalendar(false); 
   }
 
   const properties = [
@@ -74,28 +109,27 @@ const ClassicGame = ({ loadingArt }) => {
     if (value == undefined) {
       value = [];
     }
-    return answer[property].length == value.length && answer[property].every(v => value.includes(v));
+    return answer[property] && answer[property].length == value.length && answer[property].every(v => value.includes(v));
   };
 
   const checkPartiallyCorrect = (property, value) => {
     if (value == undefined) {
       value = [];
     }
-    return answer[property].some(v => value.includes(v));
+    return answer[property] && answer[property].some(v => value.includes(v));
   }
 
   const partiallyCorrectTips = (property, value) => {
     if (value == undefined) {
       value = [];
     }
-    return answer[property].filter(v => value.includes(v)).length + "/" + answer[property].length 
+    return answer[property] ? answer[property].filter(v => value.includes(v)).length + "/" + answer[property].length : "0/0";
   }
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!classicArt) return;
+    if (!classicArt) return; 
     
-    // Verificar e bloquear propriedades acertadas
     const newLocked = {...lockedProperties};
     Object.keys(answer).forEach(prop => {
       if (checkCorrect(prop, currentValues[prop])) {
@@ -107,7 +141,7 @@ const ClassicGame = ({ loadingArt }) => {
     setAttempts([{ ...currentValues }, ...attempts]);
     
     if (Object.keys(answer).every(p => checkCorrect(p, currentValues[p]))) {
-      setHasWon(true);
+      setHasWon(true); // Isso vai disparar o useEffect de vitória
     } else {
       const newHints = [...hintsUnlocked];
       if (attempts.length + 1 >= 3) newHints[0] = true;
@@ -124,18 +158,20 @@ const ClassicGame = ({ loadingArt }) => {
   };
 
   const getHintProperties = (hintIndex) => {
+    if (!answer) return []; 
+
     switch (hintIndex) {
-      case 0: // Primeira dica: Década e Técnica
+      case 0:
         return [
           { label: 'Década', property: 'data-da-obra-2', value: answer['data-da-obra-2'] },
           { label: 'Técnica', property: 'tecnica-3', value: answer['tecnica-3'] }
         ];
-      case 1: // Segunda dica: Moldura e Suporte
+      case 1:
         return [
           { label: 'Moldura', property: 'moldura', value: answer['moldura'] },
           { label: 'Suporte', property: 'suporte', value: answer['suporte'] }
         ];
-      case 2: // Terceira dica: Material e Temática
+      case 2:
         return [
           { label: 'Material', property: 'material', value: answer['material'] },
           { label: 'Temática', property: 'tematica', value: answer['tematica'] }
@@ -152,14 +188,13 @@ const ClassicGame = ({ loadingArt }) => {
     } else {
       currentValue = [{ label: 'Nenhum', value: 'Nenhum'}]
     }
-    if (answer[property.length <= 1]) {
+    if (answer && answer[property.length <= 1]) {
       return currentValue[0];
     }
     return currentValue;
   }
 
   const setCurrentPropertyValue = (property, value) => {
-    // Não permitir alterar propriedades bloqueadas
     if (lockedProperties[property]) return;
     
     let newValue;
@@ -180,6 +215,9 @@ const ClassicGame = ({ loadingArt }) => {
 
   return (
     <div className="game-page">
+      {/* 5. ADICIONAR O COMPONENTE NO TOPO DO RENDER */}
+      {showVictory && <VictoryAnimation onComplete={() => setShowVictory(false)} />}
+
       {/* Logo */}
       <Link to="/" className="logo-link">
         <div className="title-box" style={{ transform: 'scale(0.8)', cursor: 'pointer' }}>
@@ -212,6 +250,14 @@ const ClassicGame = ({ loadingArt }) => {
           <FaChartBar />
           <span className="tooltip">Estatísticas</span>
         </div>
+        <div
+          className="utility-icon"
+          style={{ cursor: 'pointer' }}
+          onClick={() => setShowCalendar(true)}
+        >
+          <FaCalendarAlt />
+          <span className="tooltip">Calendário</span>
+        </div>
         <div className="utility-icon" style={{ cursor: 'pointer' }} onClick={() => setShowTutorial(true)}>
           <FaQuestion />
           <span className="tooltip">Como jogar?</span>
@@ -222,7 +268,6 @@ const ClassicGame = ({ loadingArt }) => {
       <div className="mural-container hints-container-wrapper" style={{ marginBottom: '2rem' }}>
         <h3 className="mural-question hints-title">Acerte as características da obra do dia</h3>
         
-        {/* Container dos ícones de dica */}
         <div className="hints-container">
           {['Primeira', 'Segunda', 'Terceira'].map((hint, i) => (
             <div 
@@ -246,7 +291,6 @@ const ClassicGame = ({ loadingArt }) => {
           ))}
         </div>
 
-        {/* Container único para a dica ativa - centralizado abaixo dos ícones */}
         {activeHint !== null && (
           <div className="hint-revealed-global-container">
             <div className={`hint-revealed-box hint-${activeHint}`}>
@@ -268,21 +312,29 @@ const ClassicGame = ({ loadingArt }) => {
         )}
       </div>
 
-      <DatePicker onClick={changeDate}/>
+      {!classicArt && optionsLoaded && ( 
+          <div className="mural-container" style={{ maxWidth: '500px', marginBottom: '2rem' }}>
+            <h3 className="mural-question" style={{ color: '#AE1917' }}>
+              Não há obra de arte disponível para o dia selecionado.
+            </h3>
+            <p className="stats-text" style={{margin: '1rem 0 0 0'}}>
+              Por favor, escolha outra data no calendário.
+            </p>
+          </div>
+      )}
 
-      {/* Imagem - Aumentar espaçamento */}
-      {classicArt && (
+      {classicArt && ( 
         <div className="mural-container" style={{ maxWidth: '500px', marginBottom: '2rem' }}>
           <img src={classicArt.thumbnail?.full[0] || ''} alt="Obra" className="mural-image" />
         </div>
       )}
 
-      {/* Estatísticas - acima dos inputs */}
-      <p className="stats-text" style={{ textAlign: 'center', margin: '1.5rem 0' }}>
-        {randomPlayers} pessoas já acertaram todas as características da obra de hoje!
-      </p>
+      {classicArt && ( 
+        <p className="stats-text" style={{ textAlign: 'center', margin: '1.5rem 0' }}>
+          {randomPlayers} pessoas já acertaram todas as características da obra de hoje!
+        </p>
+      )}
 
-      {/* Inputs - Grid mais espaçada e alinhada */}
       {!optionsLoaded && (
         <div>
           <FaSpinner className='spinner'/>
@@ -297,10 +349,10 @@ const ClassicGame = ({ loadingArt }) => {
               <Select
                 value={currentValueToSelectValue(field.property)}
                 isClearable
-                isMulti={answer[field.property]?.length > 1}
+                isMulti={answer && answer[field.property]?.length > 1} 
                 onChange={(selected) => setCurrentPropertyValue(field.property, selected)}
                 options={getAllPossibleValues(field.property)}
-                isDisabled={lockedProperties[field.property]}
+                isDisabled={lockedProperties[field.property] || !classicArt} 
                 className={lockedProperties[field.property] ? 'locked-select' : ''}
                 isLoading={!optionsLoaded}
                 styles={{
@@ -314,12 +366,11 @@ const ClassicGame = ({ loadingArt }) => {
             </div>
           ))}
         </div>
-        <button type="submit" className="guess-button classic-enter-button" disabled={hasWon}>
+        <button type="submit" className="guess-button classic-enter-button" disabled={hasWon || !classicArt}> 
           ENTER
         </button>
       </form>
 
-      {/* Tentativas - Grid alinhada com os inputs */}
       <div className="attempts-grid" style={{ width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
         <div className="attempts-header" style={{ 
           display: 'grid', 
@@ -381,7 +432,7 @@ const ClassicGame = ({ loadingArt }) => {
                       color: '#000000ff'
                     }}>{partiallyCorrectTips(field.property, value)}</div>
                   )}
-                  {field.property == "data-da-obra-2" && (
+                  {field.property == "data-da-obra-2" && answer && answer[field.property] && ( 
                     <div>
                       {value[0] > answer[field.property][0] && (
                         <span style={{ marginLeft: '6px', color: '#2196f3', fontSize: '1.2em' }}>&darr;</span>
@@ -398,7 +449,13 @@ const ClassicGame = ({ loadingArt }) => {
         ))}
       </div>
 
-      {/* Modal de Tutorial */}
+      <CalendarModal
+        isOpen={showCalendar}
+        onClose={() => setShowCalendar(false)}
+        onDateSelect={changeDate}
+        currentDate={currentDate}
+      />
+
       {showTutorial && (
       <div className="tutorial-modal-overlay" onClick={() => setShowTutorial(false)}>
         <div className="tutorial-modal" onClick={(e) => e.stopPropagation()}>

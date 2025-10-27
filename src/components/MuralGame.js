@@ -8,11 +8,14 @@ import {
   FaQuestion,
   FaCheck,
   FaMapMarkerAlt,
+  FaCalendarAlt 
 } from 'react-icons/fa';
 import { titleSet, fillTitles } from '../util/ClassicModeDataFetch';
 import Select from 'react-select';
 import { getMuralArtByDate } from '../util/DailyArt';
-import DatePicker from './DatePicker';
+import { todayMidnight } from './DatePicker'; 
+import CalendarModal from './CalendarModal'; 
+import VictoryAnimation from './VictoryAnimation'; // 1. IMPORTAR A ANIMAÇÃO
 
 const MuralGame = ({ loadingArt }) => {
   const [muralArt, setMuralArt] = useState();
@@ -26,7 +29,11 @@ const MuralGame = ({ loadingArt }) => {
   const [attempts, setAttempts] = useState([]);
   const [hasWon, setHasWon] = useState(false);
 
-  // Números aleatórios para os placeholders
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [currentDate, setCurrentDate] = useState(todayMidnight());
+  
+  const [showVictory, setShowVictory] = useState(false); // 2. ADICIONAR ESTADO DE VITÓRIA
+
   const randomPlayers = Math.floor(Math.random() * 1000) + 100;
 
   const [showTutorial, setShowTutorial] = useState(false);
@@ -40,7 +47,14 @@ const MuralGame = ({ loadingArt }) => {
     };
 
     loadTitles();
-  }, []);
+  }, [loadingArt]); // Adicionada dependência
+
+  // 3. ADICIONAR USEEFFECT PARA OBSERVAR 'hasWon'
+  useEffect(() => {
+    if (hasWon) {
+      setShowVictory(true);
+    }
+  }, [hasWon]);
 
   const changeDate = (date) => {
     getMuralArtByDate(date).then(art => {
@@ -51,7 +65,10 @@ const MuralGame = ({ loadingArt }) => {
       setXPosition((Math.random() * 100) % 100);
       setYPosition((Math.random() * 100) % 100);
       setHasWon(false);
-    })
+      setShowVictory(false); // 4. RESETAR A ANIMAÇÃO
+    });
+    setCurrentDate(date); 
+    setShowCalendar(false); 
   }
 
   const handleSubmit = (e) => {
@@ -60,7 +77,7 @@ const MuralGame = ({ loadingArt }) => {
       const isCorrect = guess.toLowerCase() === muralArt.title.toLowerCase();
 
       if (isCorrect) {
-        setHasWon(true);
+        setHasWon(true); // Isso vai disparar o useEffect de vitória
         setZoom(100);
       } else {
         setZoom(Math.max(100, zoom - 80));
@@ -94,6 +111,9 @@ const MuralGame = ({ loadingArt }) => {
 
   return (
     <div className="game-page">
+      {/* 5. ADICIONAR O COMPONENTE NO TOPO DO RENDER */}
+      {showVictory && <VictoryAnimation onComplete={() => setShowVictory(false)} />}
+
       {/* Logo com link para home */}
       <Link to="/" className="logo-link">
         <div className="title-box" style={{ transform: 'scale(0.8)', cursor: 'pointer' }}>
@@ -129,14 +149,20 @@ const MuralGame = ({ loadingArt }) => {
         <div
           className="utility-icon"
           style={{ cursor: 'pointer' }}
+          onClick={() => setShowCalendar(true)}
+        >
+          <FaCalendarAlt />
+          <span className="tooltip">Calendário</span>
+        </div>
+        <div
+          className="utility-icon"
+          style={{ cursor: 'pointer' }}
           onClick={() => setShowTutorial(true)}
         >
           <FaQuestion />
           <span className="tooltip">Como jogar?</span>
         </div>
       </div>
-
-      <DatePicker onClick={changeDate}/>
 
       {/* Área da imagem do mural */}
       <div className="mural-container">
@@ -235,6 +261,13 @@ const MuralGame = ({ loadingArt }) => {
           </div>
         ))}
       </div>
+
+      <CalendarModal
+        isOpen={showCalendar}
+        onClose={() => setShowCalendar(false)}
+        onDateSelect={changeDate}
+        currentDate={currentDate}
+      />
 
       {/* Modal de Tutorial */}
       {showTutorial && (

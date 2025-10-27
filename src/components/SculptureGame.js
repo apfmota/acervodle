@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaCheck, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaCheck, FaMapMarkerAlt, FaCalendarAlt } from 'react-icons/fa';
 import { titleSet, fillTitles } from '../util/ClassicModeDataFetch';
 import Select from 'react-select';
 import { getSculptureArtByDate } from '../util/DailyArt';
-import DatePicker from './DatePicker';
+import { todayMidnight } from './DatePicker'; 
+import CalendarModal from './CalendarModal'; 
+import VictoryAnimation from './VictoryAnimation'; // 1. IMPORTAR A ANIMAÇÃO
 
 const SculptureGame = ({ loadingArt }) => {
   const [sculptureArt, setSculptureArt] = useState();
@@ -14,6 +16,11 @@ const SculptureGame = ({ loadingArt }) => {
   const [hasWon, setHasWon] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const navigate = useNavigate();
+
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [currentDate, setCurrentDate] = useState(todayMidnight());
+  
+  const [showVictory, setShowVictory] = useState(false); // 2. ADICIONAR ESTADO DE VITÓRIA
 
   // Números aleatórios para os placeholders
   const randomPlayers = Math.floor(Math.random() * 1000) + 100;
@@ -28,7 +35,15 @@ const SculptureGame = ({ loadingArt }) => {
     };
 
     loadTitles();
-  }, []);
+  }, [loadingArt]); // Adicionada dependência
+
+  // 3. ADICIONAR USEEFFECT PARA OBSERVAR 'hasWon'
+  useEffect(() => {
+    if (hasWon) {
+      setShowVictory(true);
+    }
+  }, [hasWon]);
+
 
   const changeDate = (date) => {
     getSculptureArtByDate(date).then(art => {
@@ -36,7 +51,10 @@ const SculptureGame = ({ loadingArt }) => {
       setAttempts([]);
       setGuess("");
       setHasWon(false);
-    })
+      setShowVictory(false); // 4. RESETAR A ANIMAÇÃO
+    });
+    setCurrentDate(date); 
+    setShowCalendar(false); 
   }
 
   const selectOptions = useMemo(
@@ -54,7 +72,7 @@ const SculptureGame = ({ loadingArt }) => {
       const isCorrect = guess.toLowerCase() === sculptureArt.title.toLowerCase();
 
       if (isCorrect) {
-        setHasWon(true);
+        setHasWon(true); // Isso vai disparar o useEffect de vitória
       } else {
         setAttempts([guess, ...attempts]);
         setGuess('');
@@ -75,6 +93,9 @@ const SculptureGame = ({ loadingArt }) => {
 
   return (
     <div className="game-page">
+      {/* 5. ADICIONAR O COMPONENTE NO TOPO DO RENDER */}
+      {showVictory && <VictoryAnimation onComplete={() => setShowVictory(false)} />}
+
       {/* Logo com link para home */}
       <Link to="/" className="logo-link">
         <div className="title-box" style={{ transform: 'scale(0.8)', cursor: 'pointer' }}>
@@ -110,14 +131,20 @@ const SculptureGame = ({ loadingArt }) => {
         <div
           className="utility-icon"
           style={{ cursor: 'pointer' }}
+          onClick={() => setShowCalendar(true)}
+        >
+          <FaCalendarAlt />
+          <span className="tooltip">Calendário</span>
+        </div>
+        <div
+          className="utility-icon"
+          style={{ cursor: 'pointer' }}
           onClick={() => setShowTutorial(true)}
         >
           <FaQuestion />
           <span className="tooltip">Como jogar?</span>
         </div>
       </div>
-
-      <DatePicker onClick={changeDate}/>
 
       {/* Área da imagem */}
       <div className="mural-container">
@@ -226,6 +253,13 @@ const SculptureGame = ({ loadingArt }) => {
 
       {/* Escultura de ontem */}
       <p className="yesterday-text">A escultura de ontem foi: {yesterdaySculpture}</p>
+
+      <CalendarModal
+        isOpen={showCalendar}
+        onClose={() => setShowCalendar(false)}
+        onDateSelect={changeDate}
+        currentDate={currentDate}
+      />
 
       {/* Tutorial */}
       {showTutorial && (

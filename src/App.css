@@ -1560,7 +1560,7 @@ h1 {
   }
 }
 
-.datePicker {
+/*.datePicker {
   direction: rtl;
   display: flex;
   overflow-x: auto;
@@ -1580,4 +1580,160 @@ h1 {
 
 .datePicker > div.selected {
   background-color:#003A5C;
+}*/
+
+.calendar-modal {
+  background: linear-gradient(135deg, #FFFFFF 0%, #F4FAFD 100%);
+  border: 3px solid #005285;
+  border-radius: 15px;
+  padding: 2rem;
+  max-width: 400px; /* Largura ajustada para o calendário */
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  color: #1A1A1A;
+  box-shadow: 0 10px 25px rgba(0, 82, 133, 0.2);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #005285;
+}
+
+.calendar-month-year {
+  font-family: 'Roboto', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #005285;
+}
+
+.calendar-nav-btn {
+  background: none;
+  border: none;
+  color: #005285;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.calendar-nav-btn:hover {
+  color: #EE7D00;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+}
+
+.calendar-day-header {
+  font-weight: 700;
+  text-align: center;
+  color: #003A5C;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.calendar-day {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+  height: 40px;
+  border-radius: 50%;
+  text-align: center;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.calendar-day.empty {
+  visibility: hidden;
+}
+
+.calendar-day.disabled {
+  color: #BDBDBD;
+  cursor: not-allowed;
+}
+
+.calendar-day.playable {
+  background-color: #E8F1F8;
+  color: #005285;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.calendar-day.playable:hover {
+  background-color: #C8E0F2;
+  transform: scale(1.1);
+}
+
+.calendar-day.selected {
+  background-color: #005285;
+  color: #FFFFFF;
+  font-weight: 700;
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(0, 82, 133, 0.3);
+}
+
+.calendar-day.selected:hover {
+  background-color: #003A5C;
+}
+
+/* Animação de Vitória*/
+
+.victory-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti {
+  position: absolute;
+  font-size: 6rem;
+  opacity: 0;
+  animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+  animation-fill-mode: forwards;
+  will-change: transform, opacity;
+}
+
+/* Animação para partículas da ESQUERDA */
+@keyframes flyLeftToCenter {
+  0% {
+    transform: translateX(0) translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  70% {
+    transform: translateX(80vw) translateY(-40vh) rotate(180deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100vw) translateY(-60vh) rotate(270deg);
+    opacity: 0;
+  }
+}
+
+/* Animação para partículas da DIREITA */
+@keyframes flyRightToCenter {
+  0% {
+    transform: translateX(0) translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  70% {
+    transform: translateX(-80vw) translateY(-40vh) rotate(-180deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-100vw) translateY(-60vh) rotate(-270deg);
+    opacity: 0;
+  }
 }

@@ -4,7 +4,7 @@ const initialDate = new Date(new Date("2025-10-01 00:00:00"));
 
 const formatter = new Intl.DateTimeFormat('pt-BR', {timeZone: 'America/Sao_Paulo'});
 
-const possibleDates = () => {
+export const possibleDates = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const dates = [];
@@ -19,7 +19,7 @@ const possibleDates = () => {
     return dates.reverse();
 }
 
-const todayMidnight = () => {
+export const todayMidnight = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return today;
