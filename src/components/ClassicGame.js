@@ -7,7 +7,9 @@ import obraExemplo from '../assets/obra_exemplo.jpg';
 import { getClassicArtByDate } from '../util/DailyArt.js';
 import { todayMidnight } from './DatePicker.js'; 
 import CalendarModal from './CalendarModal.js'; 
-import VictoryAnimation from './VictoryAnimation'; // 1. IMPORTAR A ANIMAÇÃO
+import VictoryAnimation from './VictoryAnimation'; 
+import VictoryModal from './VictoryModal'; 
+import PostVictoryDisplay from './PostVictoryDisplay'; 
 
 const ClassicGame = ({ loadingArt }) => {
   const [classicArt, setClassicArt] = useState();
@@ -23,7 +25,9 @@ const ClassicGame = ({ loadingArt }) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [currentDate, setCurrentDate] = useState(todayMidnight());
 
-  const [showVictory, setShowVictory] = useState(false); // 2. ADICIONAR ESTADO DE VITÓRIA
+  // ESTADOS DE VITÓRIA ATUALIZADOS
+  const [showVictoryAnimation, setShowVictoryAnimation] = useState(false);
+  const [showVictoryModal, setShowVictoryModal] = useState(false);
 
   const randomPlayers = Math.floor(Math.random() * 1000) + 100;
 
@@ -53,11 +57,11 @@ const ClassicGame = ({ loadingArt }) => {
     }); 
   }, [loadingArt]) 
 
-  // 3. ADICIONAR USEEFFECT PARA OBSERVAR 'hasWon'
+  // USEEFFECT DE VITÓRIA ATUALIZADO
   useEffect(() => {
     if (hasWon) {
-      // Ativa a animação apenas na transição para 'venceu'
-      setShowVictory(true);
+      setShowVictoryAnimation(true);
+      setShowVictoryModal(true);
     }
   }, [hasWon]);
 
@@ -80,7 +84,9 @@ const ClassicGame = ({ loadingArt }) => {
         setAttempts([]);
         setHintsUnlocked([false, false, false]); 
         setHasWon(false);
-        setShowVictory(false); // 4. RESETAR A ANIMAÇÃO AO MUDAR A DATA
+        // RESET ATUALIZADO
+        setShowVictoryAnimation(false); 
+        setShowVictoryModal(false);
       } else {
         setClassicArt(null);
         setAnswer({});
@@ -89,7 +95,9 @@ const ClassicGame = ({ loadingArt }) => {
         setAttempts([]);
         setHintsUnlocked([false, false, false]);
         setHasWon(false);
-        setShowVictory(false); // 4. RESETAR A ANIMAÇÃO
+        // RESET ATUALIZADO
+        setShowVictoryAnimation(false);
+        setShowVictoryModal(false);
       }
     });
     setCurrentDate(date); 
@@ -215,8 +223,17 @@ const ClassicGame = ({ loadingArt }) => {
 
   return (
     <div className="game-page">
-      {/* 5. ADICIONAR O COMPONENTE NO TOPO DO RENDER */}
-      {showVictory && <VictoryAnimation onComplete={() => setShowVictory(false)} />}
+      {/* COMPONENTES DE VITÓRIA */}
+      {showVictoryAnimation && <VictoryAnimation onComplete={() => setShowVictoryAnimation(false)} />}
+      
+      <VictoryModal
+        isOpen={showVictoryModal}
+        onClose={() => setShowVictoryModal(false)}
+        artworkTitle={classicArt?.title}
+        artworkImage={classicArt?.thumbnail?.full[0]}
+        attemptsCount={attempts.length + 1}
+        gameType="classic"
+      />
 
       {/* Logo */}
       <Link to="/" className="logo-link">
@@ -329,7 +346,7 @@ const ClassicGame = ({ loadingArt }) => {
         </div>
       )}
 
-      {classicArt && ( 
+      {classicArt && !hasWon && ( // Só mostra isso se ainda não ganhou
         <p className="stats-text" style={{ textAlign: 'center', margin: '1.5rem 0' }}>
           {randomPlayers} pessoas já acertaram todas as características da obra de hoje!
         </p>
@@ -352,7 +369,7 @@ const ClassicGame = ({ loadingArt }) => {
                 isMulti={answer && answer[field.property]?.length > 1} 
                 onChange={(selected) => setCurrentPropertyValue(field.property, selected)}
                 options={getAllPossibleValues(field.property)}
-                isDisabled={lockedProperties[field.property] || !classicArt} 
+                isDisabled={lockedProperties[field.property] || !classicArt || hasWon} // Desabilitado se ganhou
                 className={lockedProperties[field.property] ? 'locked-select' : ''}
                 isLoading={!optionsLoaded}
                 styles={{
@@ -371,7 +388,17 @@ const ClassicGame = ({ loadingArt }) => {
         </button>
       </form>
 
-      <div className="attempts-grid" style={{ width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
+      {/* PAINEL PÓS-VITÓRIA */}
+      {hasWon && (
+        <PostVictoryDisplay
+          gameType="classic"
+          artworkTitle={classicArt?.title}
+          onShowStats={() => setShowVictoryModal(true)} // Reabre o modal
+        />
+      )}
+
+      {/* Grid de tentativas: MARGEM SUPERIOR AUMENTADA PARA ESPAÇAMENTO */}
+      <div className="attempts-grid" style={{ width: '100%', maxWidth: '1200px', margin: '2.5rem auto 0 auto' }}>
         <div className="attempts-header" style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(6, 1fr)',
@@ -381,7 +408,8 @@ const ClassicGame = ({ loadingArt }) => {
         }}>
           {properties.map((t) => (
             <div key={t.property} className="col-title" style={{ textAlign: 'center' }}>
-              <div className="col-title-text" style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{t.label}</div>
+              {/* COR E TAMANHO DA FONTE ALTERADOS */}
+              <div className="col-title-text" style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#000' }}>{t.label}</div>
               <div className="col-underline" />
             </div>
           ))}
