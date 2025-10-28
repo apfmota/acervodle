@@ -10,7 +10,8 @@ const VictoryModal = ({
   artworkImage, 
   attemptsCount, 
   gameType, 
-  onGuessLocation // 1. ADICIONADA NOVA PROP
+  onGuessLocation, // 1. ADICIONADA NOVA PROP
+  isLocationVictory = false // 1. ADICIONE A NOVA PROP COM VALOR PADRÃO
 }) => {
   const [timeRemaining, setTimeRemaining] = useState('');
 
@@ -70,14 +71,19 @@ const VictoryModal = ({
           X
         </button>
 
-        <h2 className="victory-modal-title">Você acertou!</h2>
-        <p className="victory-modal-subtitle">A {gameName} era <strong>{artworkTitle}</strong></p>
+        {/* 2. TÍTULO E SUBTÍTULO CONDICIONAIS */}
+        <h2 className="victory-modal-title">
+          {isLocationVictory ? 'Localização Correta!' : 'Você acertou!'}
+        </h2>
+        <p className="victory-modal-subtitle">
+          {isLocationVictory ? 'Você encontrou a obra:' : `A ${gameName} era`} <strong>{artworkTitle}</strong>
+        </p>
 
         <img src={artworkImage} alt={artworkTitle} className="victory-modal-image" />
 
         <div className="victory-modal-stats-container">
           <p className="victory-modal-stats">
-            Você é o <strong>{randomPlayerNumber}º</strong> a adivinhar o campeão de hoje!
+            Você é a <strong>{randomPlayerNumber}º</strong> pessoa a acertar hoje!
           </p>
           <p className="victory-modal-stats">
             Número de tentativas: <strong>{attemptsCount}</strong>
@@ -91,7 +97,7 @@ const VictoryModal = ({
           </button>
 
           {/* 4. RENDERIZAÇÃO CONDICIONAL DO BOTÃO DE LOCALIZAÇÃO */}
-          {(gameType === 'mural' || gameType === 'sculpture') && (
+          {(gameType === 'mural' || gameType === 'sculpture') && !isLocationVictory && (
             <button 
               className="victory-stats-button" 
               onClick={handleLocationClick} 
