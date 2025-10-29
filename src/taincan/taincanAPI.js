@@ -27,7 +27,7 @@ export const countElements = async (limitDate, metaqueryParams = "") => {
     limitDate.setHours(23, 59, 59, 999);
     const cacheKey = limitDate.getTime() + "_" + metaqueryParams;
     if (countCache[cacheKey]) {
-        return countCache[metaqueryParams];
+        return countCache[cacheKey];
     }
     let count = 0;
     let page = 1;
