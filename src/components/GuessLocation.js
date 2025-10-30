@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom'; // Adicionei Link
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { getAllSculptures, getAllMurals } from '../taincan/taincanAPI'; 
 
-// Adicionei os ícones
 import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion } from 'react-icons/fa';
+
+import VictoryAnimation from './VictoryAnimation';
+import VictoryModal from './VictoryModal';
+import PostVictoryDisplay from './PostVictoryDisplay'; // Importado
 
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -29,7 +32,10 @@ const GuessLocationPage = () => {
   const [wrongGuesses, setWrongGuesses] = useState(new Set());
   const [isCorrectGuess, setIsCorrectGuess] = useState(false);
   const [mapBounds, setMapBounds] = useState(null);
-  const [showTutorial, setShowTutorial] = useState(false); // Adicionei estado para tutorial
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  const [showVictoryAnimation, setShowVictoryAnimation] = useState(false);
+  const [showVictoryModal, setShowVictoryModal] = useState(false);
 
   const artTypeName = artType === 'sculpture' ? 'localizada esta escultura' : 'localizado este mural';
   const pageTitle = `Onde está ${artTypeName}?`;
@@ -115,12 +121,14 @@ const GuessLocationPage = () => {
   }, [artType, navigate]);
 
   const handleGuess = (artItemsInCluster) => {
-    if (isCorrectGuess) return;
+    if (isCorrectGuess || showVictoryModal) return;
 
     const idsInCluster = artItemsInCluster.map(item => item.metadata['numero-de-registro'].value);
 
     if (idsInCluster.includes(correctId)) {
       setIsCorrectGuess(true);
+      setShowVictoryAnimation(true);
+      setShowVictoryModal(true);
     } else {
       setWrongGuesses(prev => new Set([...prev, ...idsInCluster]));
     }
@@ -135,6 +143,18 @@ const GuessLocationPage = () => {
 
   return (
     <div className="game-page">
+      {showVictoryAnimation && <VictoryAnimation onComplete={() => setShowVictoryAnimation(false)} />}
+      
+      <VictoryModal
+        isOpen={showVictoryModal}
+        onClose={() => setShowVictoryModal(false)}
+        artworkTitle={artObject?.title}
+        artworkImage={artObject?.thumbnail?.full[0]}
+        attemptsCount={wrongGuesses.size + 1}
+        gameType={artType}
+        isLocationVictory={true}
+      />
+
       {/* Logo com link para home - IGUAL aos outros jogos */}
       <Link to="/" className="logo-link">
         <div className="title-box" style={{ transform: 'scale(0.8)', cursor: 'pointer' }}>
@@ -189,7 +209,7 @@ const GuessLocationPage = () => {
               style={{
                 maxHeight: '200px',
                 borderRadius: '8px',
-                border: '3px solid #5D4037',
+                border: '3px solid #005285',
               }}
             />
           </div>
@@ -206,7 +226,7 @@ const GuessLocationPage = () => {
             margin: '0 auto',
             display: 'block',
             borderRadius: '8px',
-            border: '2px solid #5D4037'
+            border: '2px solid #005285'
           }}
         >
           <TileLayer
@@ -225,7 +245,7 @@ const GuessLocationPage = () => {
                   key={clusterKey}
                   position={[cluster.center.lat, cluster.center.lng]}
                   eventHandlers={{
-                    click: isCorrectGuess ? null : () => handleGuess(cluster.items),
+                    click: (isCorrectGuess || showVictoryModal) ? null : () => handleGuess(cluster.items),
                   }}
                 >
                   <Popup>
@@ -239,30 +259,20 @@ const GuessLocationPage = () => {
                         ))}
                       </ul>
                     </div>
-                  </Popup>
+                  </Popup> {/* <-- CORREÇÃO: TAG DE FECHAMENTO CORRETA */}
                 </Marker>
               );
             })}
         </MapContainer>
 
+        {/* RENDERIZAÇÃO DO PAINEL DE PÓS-VITÓRIA */}
         {isCorrectGuess && (
-          <div
-            style={{
-              textAlign: 'center',
-              marginTop: '20px',
-              padding: '15px',
-              backgroundColor: '#e8f5e9',
-              border: '2px solid #4caf50',
-              borderRadius: '8px',
-              color: '#2e7d32',
-              fontWeight: 'bold'
-            }}
-          >
-            <h3 style={{ color: '#2e7d32', margin: '0 0 10px 0' }}>🎉 Parabéns, você acertou!</h3>
-            <p style={{ margin: 0 }}>
-               "{artObject.title}".
-            </p>
-          </div>
+          <PostVictoryDisplay
+            gameType={artType}
+            artworkTitle={artObject?.title}
+            onShowStats={() => setShowVictoryModal(true)}
+            isLocationGame={true}
+          />
         )}
       </div>
 

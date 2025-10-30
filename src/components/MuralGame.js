@@ -15,7 +15,9 @@ import Select from 'react-select';
 import { getMuralArtByDate } from '../util/DailyArt';
 import { todayMidnight } from './DatePicker'; 
 import CalendarModal from './CalendarModal'; 
-import VictoryAnimation from './VictoryAnimation'; // 1. IMPORTAR A ANIMAÇÃO
+import VictoryAnimation from './VictoryAnimation'; 
+import VictoryModal from './VictoryModal'; 
+import PostVictoryDisplay from './PostVictoryDisplay'; // ADICIONADO
 
 const MuralGame = ({ loadingArt }) => {
   const [muralArt, setMuralArt] = useState();
@@ -32,7 +34,9 @@ const MuralGame = ({ loadingArt }) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [currentDate, setCurrentDate] = useState(todayMidnight());
   
-  const [showVictory, setShowVictory] = useState(false); // 2. ADICIONAR ESTADO DE VITÓRIA
+  // ESTADOS DE VITÓRIA ATUALIZADOS
+  const [showVictoryAnimation, setShowVictoryAnimation] = useState(false);
+  const [showVictoryModal, setShowVictoryModal] = useState(false);
 
   const randomPlayers = Math.floor(Math.random() * 1000) + 100;
 
@@ -49,10 +53,11 @@ const MuralGame = ({ loadingArt }) => {
     loadTitles();
   }, [loadingArt]); // Adicionada dependência
 
-  // 3. ADICIONAR USEEFFECT PARA OBSERVAR 'hasWon'
+  // USEEFFECT DE VITÓRIA ATUALIZADO
   useEffect(() => {
     if (hasWon) {
-      setShowVictory(true);
+      setShowVictoryAnimation(true);
+      setShowVictoryModal(true);
     }
   }, [hasWon]);
 
@@ -65,7 +70,9 @@ const MuralGame = ({ loadingArt }) => {
       setXPosition((Math.random() * 100) % 100);
       setYPosition((Math.random() * 100) % 100);
       setHasWon(false);
-      setShowVictory(false); // 4. RESETAR A ANIMAÇÃO
+      // RESET ATUALIZADO
+      setShowVictoryAnimation(false);
+      setShowVictoryModal(false);
     });
     setCurrentDate(date); 
     setShowCalendar(false); 
@@ -111,8 +118,18 @@ const MuralGame = ({ loadingArt }) => {
 
   return (
     <div className="game-page">
-      {/* 5. ADICIONAR O COMPONENTE NO TOPO DO RENDER */}
-      {showVictory && <VictoryAnimation onComplete={() => setShowVictory(false)} />}
+      {/* COMPONENTES DE VITÓRIA ADICIONADOS */}
+      {showVictoryAnimation && <VictoryAnimation onComplete={() => setShowVictoryAnimation(false)} />}
+      
+      <VictoryModal
+        isOpen={showVictoryModal}
+        onClose={() => setShowVictoryModal(false)}
+        artworkTitle={muralArt?.title}
+        artworkImage={muralArt?.thumbnail?.full[0]}
+        attemptsCount={attempts.length + 1}
+        gameType="mural"
+        onGuessLocation={handleGuessLocation}
+      />
 
       {/* Logo com link para home */}
       <Link to="/" className="logo-link">
@@ -183,64 +200,36 @@ const MuralGame = ({ loadingArt }) => {
       {/* Texto de estatísticas */}
       <p className="stats-text">{randomPlayers} pessoas já acertaram este mural!</p>
 
-      {/* Campo de palpite */}
-      <form onSubmit={handleSubmit} className="guess-form">
-        <Select
-          options={selectOptions}
-          value={selectOptions.find((option) => option.value === guess)}
-          onChange={(selectedOption) => setGuess(selectedOption ? selectedOption.value : '')}
-          placeholder="Digite sua tentativa..."
-          className="guess-input-select"
-          classNamePrefix="react-select"
-          filterOption={filterOptionByPrefix}
-          noOptionsMessage={() => null}
-          isDisabled={hasWon}
-          isClearable
+      {/* LÓGICA DE EXIBIÇÃO ATUALIZADA */}
+      {!hasWon ? (
+        <form onSubmit={handleSubmit} className="guess-form">
+          <Select
+            options={selectOptions}
+            value={selectOptions.find((option) => option.value === guess)}
+            onChange={(selectedOption) => setGuess(selectedOption ? selectedOption.value : '')}
+            placeholder="Digite sua tentativa..."
+            className="guess-input-select"
+            classNamePrefix="react-select"
+            filterOption={filterOptionByPrefix}
+            noOptionsMessage={() => null}
+            isDisabled={hasWon}
+            isClearable
+          />
+
+          <button type="submit" className="guess-button" disabled={hasWon}>
+            ENTER
+          </button>
+        </form>
+      ) : (
+        <PostVictoryDisplay
+          gameType="mural"
+          artworkTitle={muralArt?.title}
+          onGuessLocation={handleGuessLocation}
+          onShowStats={() => setShowVictoryModal(true)} // Reabre o modal
         />
-
-        <button type="submit" className="guess-button" disabled={hasWon}>
-          ENTER
-        </button>
-      </form>
-
-      {/* Mensagem de sucesso */}
-      {hasWon && (
-        <div>
-          <div className="success-message" style={{ position: 'relative' }}>
-            <FaCheck className="success-icon" />
-            Parabéns! Você acertou o mural: {muralArt.title}
-            <div className="attempt-count">
-              <span className="people-icon">👥</span>
-              {Math.floor(Math.random() * 500) + 1}
-              <div className="attempt-count-tooltip">
-                O número de jogadores que também acertaram com essa tentativa!
-              </div>
-            </div>
-          </div>
-
-          <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-            <button
-              onClick={handleGuessLocation}
-              style={{
-                padding: '0.8rem 1.5rem',
-                backgroundColor: '#005285',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontFamily: "'Cinzel', serif",
-                fontSize: '1rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                margin: '0 auto',
-              }}
-            >
-              <FaMapMarkerAlt /> Adivinhar Localização
-            </button>
-          </div>
-        </div>
       )}
+
+      {/* Mensagem de sucesso ANTIGA REMOVIDA */}
 
       {/* Tentativas erradas */}
       <div className="attempts-list">

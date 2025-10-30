@@ -6,7 +6,9 @@ import Select from 'react-select';
 import { getSculptureArtByDate } from '../util/DailyArt';
 import { todayMidnight } from './DatePicker'; 
 import CalendarModal from './CalendarModal'; 
-import VictoryAnimation from './VictoryAnimation'; // 1. IMPORTAR A ANIMAÇÃO
+import VictoryAnimation from './VictoryAnimation'; 
+import VictoryModal from './VictoryModal'; 
+import PostVictoryDisplay from './PostVictoryDisplay'; // ADICIONADO
 
 const SculptureGame = ({ loadingArt }) => {
   const [sculptureArt, setSculptureArt] = useState();
@@ -20,7 +22,9 @@ const SculptureGame = ({ loadingArt }) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [currentDate, setCurrentDate] = useState(todayMidnight());
   
-  const [showVictory, setShowVictory] = useState(false); // 2. ADICIONAR ESTADO DE VITÓRIA
+  // ESTADOS DE VITÓRIA ATUALIZADOS
+  const [showVictoryAnimation, setShowVictoryAnimation] = useState(false);
+  const [showVictoryModal, setShowVictoryModal] = useState(false);
 
   // Números aleatórios para os placeholders
   const randomPlayers = Math.floor(Math.random() * 1000) + 100;
@@ -37,10 +41,11 @@ const SculptureGame = ({ loadingArt }) => {
     loadTitles();
   }, [loadingArt]); // Adicionada dependência
 
-  // 3. ADICIONAR USEEFFECT PARA OBSERVAR 'hasWon'
+  // USEEFFECT DE VITÓRIA ATUALIZADO
   useEffect(() => {
     if (hasWon) {
-      setShowVictory(true);
+      setShowVictoryAnimation(true);
+      setShowVictoryModal(true);
     }
   }, [hasWon]);
 
@@ -51,7 +56,9 @@ const SculptureGame = ({ loadingArt }) => {
       setAttempts([]);
       setGuess("");
       setHasWon(false);
-      setShowVictory(false); // 4. RESETAR A ANIMAÇÃO
+      // RESET ATUALIZADO
+      setShowVictoryAnimation(false);
+      setShowVictoryModal(false);
     });
     setCurrentDate(date); 
     setShowCalendar(false); 
@@ -91,10 +98,23 @@ const SculptureGame = ({ loadingArt }) => {
     return option.label.toLowerCase().startsWith(inputValue.toLowerCase());
   };
 
+  // Define a imagem correta para o modal
+  const victoryImage = sculptureArt ? `/acervo_imgs/${sculptureArt.title.replace(/\s+/g, '_')}.jpg` : '';
+
   return (
     <div className="game-page">
-      {/* 5. ADICIONAR O COMPONENTE NO TOPO DO RENDER */}
-      {showVictory && <VictoryAnimation onComplete={() => setShowVictory(false)} />}
+      {/* COMPONENTES DE VITÓRIA ADICIONADOS */}
+      {showVictoryAnimation && <VictoryAnimation onComplete={() => setShowVictoryAnimation(false)} />}
+      
+      <VictoryModal
+        isOpen={showVictoryModal}
+        onClose={() => setShowVictoryModal(false)}
+        artworkTitle={sculptureArt?.title}
+        artworkImage={victoryImage}
+        attemptsCount={attempts.length + 1}
+        gameType="sculpture"
+        onGuessLocation={handleGuessLocation}
+      />
 
       {/* Logo com link para home */}
       <Link to="/" className="logo-link">
@@ -153,7 +173,7 @@ const SculptureGame = ({ loadingArt }) => {
           {sculptureArt && (
             <img 
               src={hasWon 
-                ? `/acervo_imgs/${sculptureArt.title.replace(/\s+/g, '_')}.jpg` 
+                ? victoryImage 
                 : `/acervo_imgs/${sculptureArt.title.replace(/\s+/g, '_')}-mask.jpg`
               }
               alt={hasWon ? "Escultura revelada" : "Silhueta da escultura"}
@@ -173,63 +193,36 @@ const SculptureGame = ({ loadingArt }) => {
       {/* Estatísticas */}
       <p className="stats-text">{randomPlayers} pessoas já acertaram esta escultura!</p>
 
-      {/* Campo de palpite */}
-      <form onSubmit={handleSubmit} className="guess-form">
-        <Select
-          options={selectOptions}
-          value={selectOptions.find((option) => option.value === guess)}
-          onChange={(selectedOption) => setGuess(selectedOption ? selectedOption.value : '')}
-          placeholder="Digite sua tentativa..."
-          className="guess-input-select"
-          classNamePrefix="react-select"
-          filterOption={filterOptionByPrefix}
-          noOptionsMessage={() => null} 
-          isDisabled={hasWon}
-          isClearable
+      {/* LÓGICA DE EXIBIÇÃO ATUALIZADA */}
+      {!hasWon ? (
+        <form onSubmit={handleSubmit} className="guess-form">
+          <Select
+            options={selectOptions}
+            value={selectOptions.find((option) => option.value === guess)}
+            onChange={(selectedOption) => setGuess(selectedOption ? selectedOption.value : '')}
+            placeholder="Digite sua tentativa..."
+            className="guess-input-select"
+            classNamePrefix="react-select"
+            filterOption={filterOptionByPrefix}
+            noOptionsMessage={() => null} 
+            isDisabled={hasWon}
+            isClearable
+          />
+
+          <button type="submit" className="guess-button" disabled={hasWon}>
+            ENTER
+          </button>
+        </form>
+      ) : (
+        <PostVictoryDisplay
+          gameType="sculpture"
+          artworkTitle={sculptureArt?.title}
+          onGuessLocation={handleGuessLocation}
+          onShowStats={() => setShowVictoryModal(true)} // Reabre o modal
         />
-
-        <button type="submit" className="guess-button" disabled={hasWon}>
-          ENTER
-        </button>
-      </form>
-
-      {/* Mensagem de acerto */}
-      {hasWon && (
-        <div>
-          <div className="success-message">
-            <FaCheck className="success-icon" />
-            Parabéns! Você acertou a escultura: {sculptureArt.title}
-            <div className="attempt-count">
-              <span className="people-icon">👥</span>
-              {Math.floor(Math.random() * 500) + 1}
-              <div className="attempt-count-tooltip">
-                O número de jogadores que também acertaram com essa tentativa!
-              </div>
-            </div>
-          </div>
-
-          <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-            <button
-              onClick={handleGuessLocation}
-              style={{
-                padding: '0.8rem 1.5rem',
-                backgroundColor: '#005285',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontFamily: "'Cinzel', serif",
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                margin: '0 auto',
-              }}
-            >
-              <FaMapMarkerAlt /> Adivinhar Localização
-            </button>
-          </div>
-        </div>
       )}
+
+      {/* Mensagem de sucesso ANTIGA REMOVIDA */}
 
       {/* Tentativas erradas */}
       <div className="attempts-list">
