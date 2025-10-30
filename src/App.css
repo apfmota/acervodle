@@ -1,9 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Stick+No+Bills:wght@400;600;700;800&display=swap');
 
-/* Use border-box sizing to prevent width+border from causing horizontal overflow */
-html { box-sizing: border-box; }
-*, *::before, *::after { box-sizing: inherit; }
-
 .App {
   text-align: center;
   min-height: 100vh;
@@ -21,6 +17,10 @@ html { box-sizing: border-box; }
 
 /* Guardrail: avoid accidental horizontal scrolling on narrow screens */
 @media (max-width: 768px) {
+  /* Use border-box sizing only on mobile to prevent width+border from causing horizontal overflow */
+  html { box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: inherit; }
+  
   body, .App, .content {
     overflow-x: hidden;
   }
