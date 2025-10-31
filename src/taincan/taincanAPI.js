@@ -8,6 +8,9 @@ export const NO_TITLE_FILTER_METAQUERY = "metaquery[1][key]=2177&metaquery[1][co
 
 export const ORDER_PARAMS = "order=ASC&orderby=date";
 
+const PAGES_BATCH_SIZE = 10;
+const PER_PAGE = 50;
+
 var cachedMetadata = []
 export const getCollectionMetadata = async () => {
     if (cachedMetadata.length == 0) {
@@ -31,24 +34,33 @@ export const countElements = async (limitDate, metaqueryParams = "") => {
     }
     let count = 0;
     let page = 1;
-    const perpage = 50;
-    let itemsCurrentPage = 0;
+    let lastPage = false;
     do {
-        const request = await fetch(COLLECTION_URL + `/items?perpage=${perpage}&paged=${page}&${metaqueryParams}&fetch_only=status,creation_date&${ORDER_PARAMS}`);
-        const items = (await request.json()).items;
-        itemsCurrentPage = 0;
-        for (const item of items) {
-            const itemCreationDate = new Date(item.creation_date);
-            if (itemCreationDate <= limitDate.getTime()) {
-                count++;
-                itemsCurrentPage++;
-            } else {
-                countCache[cacheKey] = count;
-                return count;
+        lastPage = false;
+        const promises = [];
+        for (let i = 0; i < PAGES_BATCH_SIZE; i++) {
+            const fetchPage = async (currentPage) => {
+                const request = await fetch(COLLECTION_URL + `/items?perpage=${PER_PAGE}&paged=${currentPage}&${metaqueryParams}&fetch_only=status,creation_date&${ORDER_PARAMS}`);
+                const items = (await request.json()).items;
+                if (items.length > 0) {
+                    for (const item of items) {
+                        const itemCreationDate = new Date(item.creation_date);
+                        if (itemCreationDate <= limitDate.getTime()) {
+                            count++;
+                        } else {
+                            lastPage = true;
+                            break;
+                        }
+                    }
+                } else {
+                    lastPage = true;
+                }
             }
+            promises.push(fetchPage(page));
+            page++;
         }
-        page += 1;
-    } while (itemsCurrentPage != 0);
+        await Promise.all(promises);
+    } while (!lastPage);
     countCache[cacheKey] = count;
     return count;
 }
@@ -68,15 +80,25 @@ export const getElements = async (metaqueryParams = "") => {
     }
     let elements = [];
     let page = 1;
-    const perpage = 100;
-    let itemsCurrentPage = 0;
+    let lastPage = false;
     do {
-        const request = await fetch(COLLECTION_URL + `/items?perpage=${perpage}&paged=${page}&${metaqueryParams}&${await getFetchParameters()}`);
-        const json = await request.json();
-        json.items.forEach(element => elements.push(element));
-        itemsCurrentPage = json.items.length;
-        page += 1;
-    } while (itemsCurrentPage != 0);
+        lastPage = false;
+        const promises = [];
+        for (let i = 0; i < PAGES_BATCH_SIZE; i++) {
+            const fetchPage = async (currentPage) => {
+                const request = await fetch(COLLECTION_URL + `/items?perpage=${PER_PAGE}&paged=${currentPage}&${metaqueryParams}&${await getFetchParameters()}`);
+                const json = await request.json();
+                if (json.items.length > 0) {
+                    json.items.forEach(element => elements.push(element));
+                } else {
+                    lastPage = true;
+                }
+            }
+            promises.push(fetchPage(page));
+            page++;
+        }
+        await Promise.all(promises);
+    } while (!lastPage);
     elementsCache[metaqueryParams] = elements;
     return elements;
 }
