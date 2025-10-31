@@ -30,6 +30,7 @@ export const fillTitles = async (type) => {
 }
 
 export const fillPossibleValues = async () => {
+    const initialDate = new Date();
     const allArts = await getAllArts();
     for (const art of allArts) {
         const artValues = getArtProperties(art);
@@ -38,6 +39,7 @@ export const fillPossibleValues = async () => {
             values.forEach(v => propertiesOfInterest[property].add(v))
         }
     }
+    console.log("demorei " + (new Date().getTime() - initialDate.getTime()) / 1000 + "s")
 }
 
 const getPropertyValues = (art, property) => {
