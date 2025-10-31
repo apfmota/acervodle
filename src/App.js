@@ -18,6 +18,10 @@ function App() {
 
   return (
     <Router>
+      <head>
+        <link rel="icon" href="/logo-acervo.ico" />
+        <title>Acervodle</title>
+      </head>
       <div className="App">
         <div
           className="background-overlay"
