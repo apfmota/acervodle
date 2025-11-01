@@ -11,7 +11,7 @@ import VictoryAnimation from './VictoryAnimation';
 import VictoryModal from './VictoryModal'; 
 import PostVictoryDisplay from './PostVictoryDisplay'; 
 
-const ClassicGame = ({ loadingArt }) => {
+const ClassicGame = ({ loadingArt, loadingOptions }) => {
   const [classicArt, setClassicArt] = useState();
   const [lockedProperties, setLockedProperties] = useState({});
   const [currentValues, setCurrentValues] = useState({});
@@ -34,7 +34,10 @@ const ClassicGame = ({ loadingArt }) => {
   const [activeHint, setActiveHint] = useState(null);
 
   useEffect(() => {
-    fillPossibleValues().then(() => setOptionsLoaded(true));
+    loadingOptions.then(() => {
+      setOptionsLoaded(true);
+    })
+
     loadingArt.then((art) => {
       
       if (art) {

@@ -6,10 +6,7 @@ export const SCULPTURES_METAQUERY = "metaquery[0][key]=2200&metaquery[0][compare
 
 export const NO_TITLE_FILTER_METAQUERY = "metaquery[1][key]=2177&metaquery[1][compare]=!=&metaquery[1][value]=Sem Título"
 
-export const ORDER_PARAMS = "order=ASC&orderby=date";
-
-const PAGES_BATCH_SIZE = 10;
-const PER_PAGE = 50;
+export const ORDER_PARAMS = "order=DESC&orderby=date";
 
 var cachedMetadata = []
 export const getCollectionMetadata = async () => {
@@ -35,17 +32,23 @@ export const countElements = async (limitDate, metaqueryParams = "") => {
     let count = 0;
     let page = 1;
     let lastPage = false;
+    let total;
+    const PER_PAGE = 20;
+    const PAGES_BATCH_SIZE = 3;
     do {
         lastPage = false;
         const promises = [];
         for (let i = 0; i < PAGES_BATCH_SIZE; i++) {
             const fetchPage = async (currentPage) => {
                 const request = await fetch(COLLECTION_URL + `/items?perpage=${PER_PAGE}&paged=${currentPage}&${metaqueryParams}&fetch_only=status,creation_date&${ORDER_PARAMS}`);
+                if (total == null && request.headers.get("X-WP-Total") != 0) {
+                    total = request.headers.get("X-WP-Total");
+                }
                 const items = (await request.json()).items;
                 if (items.length > 0) {
                     for (const item of items) {
                         const itemCreationDate = new Date(item.creation_date);
-                        if (itemCreationDate <= limitDate.getTime()) {
+                        if (itemCreationDate > limitDate.getTime()) {
                             count++;
                         } else {
                             lastPage = true;
@@ -62,7 +65,8 @@ export const countElements = async (limitDate, metaqueryParams = "") => {
         await Promise.all(promises);
     } while (!lastPage);
     countCache[cacheKey] = count;
-    return count;
+    console.log(total - count);
+    return total - count;
 }
 
 export const countMurals = async (limitDate) => {
@@ -81,6 +85,8 @@ export const getElements = async (metaqueryParams = "") => {
     let elements = [];
     let page = 1;
     let lastPage = false;
+    const PAGES_BATCH_SIZE = 10;
+    const PER_PAGE = 50;
     do {
         lastPage = false;
         const promises = [];

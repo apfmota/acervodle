@@ -39,7 +39,6 @@ export const fillPossibleValues = async () => {
             values.forEach(v => propertiesOfInterest[property].add(v))
         }
     }
-    console.log("demorei " + (new Date().getTime() - initialDate.getTime()) / 1000 + "s")
 }
 
 const getPropertyValues = (art, property) => {
