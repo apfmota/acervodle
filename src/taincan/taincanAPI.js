@@ -65,7 +65,6 @@ export const countElements = async (limitDate, metaqueryParams = "") => {
         await Promise.all(promises);
     } while (!lastPage);
     countCache[cacheKey] = count;
-    console.log(total - count);
     return total - count;
 }
 
