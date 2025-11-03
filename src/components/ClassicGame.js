@@ -93,6 +93,7 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
         const dateAlreadyWon = StreakManager.isDateWon(date, "Clássico");
         setAlreadyWon(dateAlreadyWon);
         setShowVictoryModal(dateAlreadyWon);
+        setHasWon(false);
         // RESET ATUALIZADO
         setShowVictoryAnimation(false); 
       } else {
