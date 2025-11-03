@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaLightbulb, FaSpinner, FaCalendarAlt } from 'react-icons/fa'; 
+import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaLightbulb, FaSpinner, FaCalendarAlt, FaFire } from 'react-icons/fa'; 
 import Select from 'react-select';
 import { fillPossibleValues, getAllPossibleValues, getArtProperties } from '../util/ClassicModeDataFetch.js';
 import obraExemplo from '../assets/obra_exemplo.jpg';
@@ -10,6 +10,7 @@ import CalendarModal from './CalendarModal.js';
 import VictoryAnimation from './VictoryAnimation'; 
 import VictoryModal from './VictoryModal'; 
 import PostVictoryDisplay from './PostVictoryDisplay'; 
+import StreakManager from '../util/StreakManager.js';
 
 const ClassicGame = ({ loadingArt, loadingOptions }) => {
   const [classicArt, setClassicArt] = useState();
@@ -21,6 +22,7 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
   const [hintsUnlocked, setHintsUnlocked] = useState([false, false, false]);
   const [answer, setAnswer] = useState({});
   const [showTutorial, setShowTutorial] = useState(false);
+  const [alreadyWon, setAlreadyWon] = useState(false);
   
   const [showCalendar, setShowCalendar] = useState(false);
   const [currentDate, setCurrentDate] = useState(todayMidnight());
@@ -44,7 +46,9 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
         setClassicArt(art);
         const answerProperties = getArtProperties(art);
         setAnswer(answerProperties);
-        
+        const dateAlreadyWon = StreakManager.isDateWon(currentDate, "Clássico");
+        setAlreadyWon(dateAlreadyWon);
+        setShowVictoryModal(dateAlreadyWon);
         const initialLocked = {};
         Object.keys(answerProperties).forEach(prop => {
           if (answerProperties[prop].length === 0) {
@@ -85,11 +89,12 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
         setLockedProperties(initialLocked);
         setCurrentValues({});
         setAttempts([]);
-        setHintsUnlocked([false, false, false]); 
-        setHasWon(false);
+        setHintsUnlocked([false, false, false]);
+        const dateAlreadyWon = StreakManager.isDateWon(date, "Clássico");
+        setAlreadyWon(dateAlreadyWon);
+        setShowVictoryModal(dateAlreadyWon);
         // RESET ATUALIZADO
         setShowVictoryAnimation(false); 
-        setShowVictoryModal(false);
       } else {
         setClassicArt(null);
         setAnswer({});
@@ -152,6 +157,7 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
     setAttempts([{ ...currentValues }, ...attempts]);
     
     if (Object.keys(answer).every(p => checkCorrect(p, currentValues[p]))) {
+      StreakManager.addDate(currentDate, "Clássico");
       setHasWon(true); // Isso vai disparar o useEffect de vitória
     } else {
       const newHints = [...hintsUnlocked];
@@ -236,6 +242,7 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
         artworkImage={classicArt?.thumbnail?.full[0]}
         attemptsCount={attempts.length + 1}
         gameType="classic"
+        alreadyWon={alreadyWon}
       />
 
       {/* Logo */}
@@ -277,6 +284,12 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
         >
           <FaCalendarAlt />
           <span className="tooltip">Calendário</span>
+        </div>
+        <div className='utility-icon'>
+          <span style={{ whiteSpace: 'nowrap'}}>
+            <FaFire/>{StreakManager.currentStreak("Clássico")}
+          </span>
+          <span className='tooltip'>Sequência atual</span>
         </div>
         <div className="utility-icon" style={{ cursor: 'pointer' }} onClick={() => setShowTutorial(true)}>
           <FaQuestion />
@@ -349,7 +362,7 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
         </div>
       )}
 
-      {classicArt && !hasWon && ( // Só mostra isso se ainda não ganhou
+      {classicArt && (!hasWon && !alreadyWon) && ( // Só mostra isso se ainda não ganhou
         <p className="stats-text" style={{ textAlign: 'center', margin: '1.5rem 0' }}>
           {randomPlayers} pessoas já acertaram todas as características da obra de hoje!
         </p>
@@ -372,7 +385,7 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
                 isMulti={answer && answer[field.property]?.length > 1} 
                 onChange={(selected) => setCurrentPropertyValue(field.property, selected)}
                 options={getAllPossibleValues(field.property)}
-                isDisabled={lockedProperties[field.property] || !classicArt || hasWon} // Desabilitado se ganhou
+                isDisabled={lockedProperties[field.property] || !classicArt || hasWon || alreadyWon} // Desabilitado se ganhou
                 className={lockedProperties[field.property] ? 'locked-select' : ''}
                 isLoading={!optionsLoaded}
                 styles={{
@@ -386,13 +399,13 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
             </div>
           ))}
         </div>
-        <button type="submit" className="guess-button classic-enter-button" disabled={hasWon || !classicArt}> 
+        <button type="submit" className="guess-button classic-enter-button" disabled={hasWon || alreadyWon || !classicArt}> 
           ENTER
         </button>
       </form>
 
       {/* PAINEL PÓS-VITÓRIA */}
-      {hasWon && (
+      {(hasWon || alreadyWon) && (
         <PostVictoryDisplay
           gameType="classic"
           artworkTitle={classicArt?.title}
@@ -485,6 +498,7 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
         onClose={() => setShowCalendar(false)}
         onDateSelect={changeDate}
         currentDate={currentDate}
+        mode="Clássico"
       />
 
       {showTutorial && (

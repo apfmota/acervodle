@@ -1790,6 +1790,13 @@ h1 {
   font-weight: 500;
 }
 
+.calendar-day.already-won {
+  background-color: #12f79f;
+  color: #00350d;
+  cursor: pointer;
+  font-weight: 500;
+}
+
 .calendar-day.playable:hover {
   background-color: #C8E0F2;
   transform: scale(1.1);

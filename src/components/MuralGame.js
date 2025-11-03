@@ -8,7 +8,8 @@ import {
   FaQuestion,
   FaCheck,
   FaMapMarkerAlt,
-  FaCalendarAlt 
+  FaCalendarAlt, 
+  FaFire
 } from 'react-icons/fa';
 import { titleSet, fillTitles } from '../util/ClassicModeDataFetch';
 import Select from 'react-select';
@@ -18,6 +19,7 @@ import CalendarModal from './CalendarModal';
 import VictoryAnimation from './VictoryAnimation'; 
 import VictoryModal from './VictoryModal'; 
 import PostVictoryDisplay from './PostVictoryDisplay'; // ADICIONADO
+import StreakManager from '../util/StreakManager.js';
 
 const MuralGame = ({ loadingArt }) => {
   const [muralArt, setMuralArt] = useState();
@@ -30,6 +32,7 @@ const MuralGame = ({ loadingArt }) => {
   const [guess, setGuess] = useState('');
   const [attempts, setAttempts] = useState([]);
   const [hasWon, setHasWon] = useState(false);
+  const [alreadyWon, setAlreadyWon] = useState(false);
 
   const [showCalendar, setShowCalendar] = useState(false);
   const [currentDate, setCurrentDate] = useState(todayMidnight());
@@ -43,7 +46,15 @@ const MuralGame = ({ loadingArt }) => {
   const [showTutorial, setShowTutorial] = useState(false);
 
   useEffect(() => {
-    loadingArt.then(setMuralArt);
+    loadingArt.then((art) => {
+      setMuralArt(art);
+      const dateAlreadyWon = StreakManager.isDateWon(currentDate, "Mural");
+      setAlreadyWon(dateAlreadyWon);
+      setShowVictoryModal(dateAlreadyWon);
+      if (dateAlreadyWon) {
+        setZoom(100);
+      }
+    });
 
     const loadTitles = async () => {
       const titles = await fillTitles('mural');
@@ -71,8 +82,13 @@ const MuralGame = ({ loadingArt }) => {
       setYPosition((Math.random() * 100) % 100);
       setHasWon(false);
       // RESET ATUALIZADO
+      const dateAlreadyWon = StreakManager.isDateWon(date, "Mural");
+      setAlreadyWon(dateAlreadyWon);
+      setShowVictoryModal(dateAlreadyWon);
+      if (dateAlreadyWon) {
+        setZoom(100);
+      }
       setShowVictoryAnimation(false);
-      setShowVictoryModal(false);
     });
     setCurrentDate(date); 
     setShowCalendar(false); 
@@ -84,6 +100,7 @@ const MuralGame = ({ loadingArt }) => {
       const isCorrect = guess.toLowerCase() === muralArt.title.toLowerCase();
 
       if (isCorrect) {
+        StreakManager.addDate(currentDate, "Mural");
         setHasWon(true); // Isso vai disparar o useEffect de vitória
         setZoom(100);
       } else {
@@ -129,6 +146,7 @@ const MuralGame = ({ loadingArt }) => {
         attemptsCount={attempts.length + 1}
         gameType="mural"
         onGuessLocation={handleGuessLocation}
+        alreadyWon={alreadyWon}
       />
 
       {/* Logo com link para home */}
@@ -171,6 +189,12 @@ const MuralGame = ({ loadingArt }) => {
           <FaCalendarAlt />
           <span className="tooltip">Calendário</span>
         </div>
+        <div className='utility-icon'>
+          <span style={{ whiteSpace: 'nowrap'}}>
+            <FaFire/>{StreakManager.currentStreak("Mural")}
+          </span>
+          <span className='tooltip'>Sequência atual</span>
+        </div>
         <div
           className="utility-icon"
           style={{ cursor: 'pointer' }}
@@ -201,7 +225,7 @@ const MuralGame = ({ loadingArt }) => {
       <p className="stats-text">{randomPlayers} pessoas já acertaram este mural!</p>
 
       {/* LÓGICA DE EXIBIÇÃO ATUALIZADA */}
-      {!hasWon ? (
+      {(!hasWon && !alreadyWon) ? (
         <form onSubmit={handleSubmit} className="guess-form">
           <Select
             options={selectOptions}
@@ -212,11 +236,11 @@ const MuralGame = ({ loadingArt }) => {
             classNamePrefix="react-select"
             filterOption={filterOptionByPrefix}
             noOptionsMessage={() => null}
-            isDisabled={hasWon}
+            isDisabled={hasWon || alreadyWon}
             isClearable
           />
 
-          <button type="submit" className="guess-button" disabled={hasWon}>
+          <button type="submit" className="guess-button" disabled={hasWon || alreadyWon}>
             ENTER
           </button>
         </form>
@@ -256,6 +280,7 @@ const MuralGame = ({ loadingArt }) => {
         onClose={() => setShowCalendar(false)}
         onDateSelect={changeDate}
         currentDate={currentDate}
+        mode="Mural"
       />
 
       {/* Modal de Tutorial */}
