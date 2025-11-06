@@ -15,9 +15,14 @@ function App() {
   const [classicArt, setClassicArt] = useState(getTodaysClassicArt());
   const [muralArt, setMuralArt] = useState(getTodaysMuralArt());
   const [sculptureArt, setSculptureArt] = useState(getTodaysSculptureArt());
+  const [loadingOptions, setLoadingOptions] = useState(fillPossibleValues());
 
   return (
     <Router>
+      <head>
+        <link rel="icon" href="/logo-acervo.ico" />
+        <title>Acervodle</title>
+      </head>
       <div className="App">
         <div
           className="background-overlay"
@@ -28,7 +33,7 @@ function App() {
         
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/classic" element={<ClassicGame loadingArt={classicArt} />} />
+          <Route path="/classic" element={<ClassicGame loadingArt={classicArt} loadingOptions={loadingOptions} />} />
           <Route path="/mural" element={<MuralGame loadingArt={muralArt} />} />
           <Route path="/sculpture" element={<SculptureGame loadingArt={sculptureArt} />} />
           <Route path="/map" element={<GuessLocation />} />

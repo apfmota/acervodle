@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { possibleDates, todayMidnight } from './DatePicker'; 
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import StreakManager from '../util/StreakManager';
 
 const getDaysInMonth = (year, month) => {
   const date = new Date(year, month, 1);
@@ -17,7 +18,7 @@ const monthNames = [
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
 ];
 
-const CalendarModal = ({ isOpen, onClose, onDateSelect, currentDate }) => {
+const CalendarModal = ({ isOpen, onClose, onDateSelect, currentDate, mode }) => {
   const [displayDate, setDisplayDate] = useState(currentDate || todayMidnight());
 
   const playableDatesSet = useMemo(() => {
@@ -85,11 +86,13 @@ const CalendarModal = ({ isOpen, onClose, onDateSelect, currentDate }) => {
           {daysInMonth.map((day) => {
             const isPlayable = playableDatesSet.has(day.toDateString());
             const isSelected = day.toDateString() === currentDate.toDateString();
+            const alreadyWon = StreakManager.isDateWon(day, mode);
             
             let dayClass = 'calendar-day';
             if (isPlayable) dayClass += ' playable';
             if (isSelected) dayClass += ' selected';
             if (!isPlayable) dayClass += ' disabled';
+            if (alreadyWon) dayClass += ' already-won';
 
             return (
               <div

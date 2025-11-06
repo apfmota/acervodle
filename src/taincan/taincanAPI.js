@@ -6,7 +6,7 @@ export const SCULPTURES_METAQUERY = "metaquery[0][key]=2200&metaquery[0][compare
 
 export const NO_TITLE_FILTER_METAQUERY = "metaquery[1][key]=2177&metaquery[1][compare]=!=&metaquery[1][value]=Sem Título"
 
-export const ORDER_PARAMS = "order=ASC&orderby=date";
+export const ORDER_PARAMS = "order=DESC&orderby=date";
 
 var cachedMetadata = []
 export const getCollectionMetadata = async () => {
@@ -27,30 +27,45 @@ export const countElements = async (limitDate, metaqueryParams = "") => {
     limitDate.setHours(23, 59, 59, 999);
     const cacheKey = limitDate.getTime() + "_" + metaqueryParams;
     if (countCache[cacheKey]) {
-        return countCache[metaqueryParams];
+        return countCache[cacheKey];
     }
     let count = 0;
     let page = 1;
-    const perpage = 50;
-    let itemsCurrentPage = 0;
+    let lastPage = false;
+    let total;
+    const PER_PAGE = 20;
+    const PAGES_BATCH_SIZE = 3;
     do {
-        const request = await fetch(COLLECTION_URL + `/items?perpage=${perpage}&paged=${page}&${metaqueryParams}&fetch_only=status,creation_date&${ORDER_PARAMS}`);
-        const items = (await request.json()).items;
-        itemsCurrentPage = 0;
-        for (const item of items) {
-            const itemCreationDate = new Date(item.creation_date);
-            if (itemCreationDate <= limitDate.getTime()) {
-                count++;
-                itemsCurrentPage++;
-            } else {
-                countCache[cacheKey] = count;
-                return count;
+        lastPage = false;
+        const promises = [];
+        for (let i = 0; i < PAGES_BATCH_SIZE; i++) {
+            const fetchPage = async (currentPage) => {
+                const request = await fetch(COLLECTION_URL + `/items?perpage=${PER_PAGE}&paged=${currentPage}&${metaqueryParams}&fetch_only=status,creation_date&${ORDER_PARAMS}`);
+                if (total == null && request.headers.get("X-WP-Total") != 0) {
+                    total = request.headers.get("X-WP-Total");
+                }
+                const items = (await request.json()).items;
+                if (items.length > 0) {
+                    for (const item of items) {
+                        const itemCreationDate = new Date(item.creation_date);
+                        if (itemCreationDate > limitDate.getTime()) {
+                            count++;
+                        } else {
+                            lastPage = true;
+                            break;
+                        }
+                    }
+                } else {
+                    lastPage = true;
+                }
             }
+            promises.push(fetchPage(page));
+            page++;
         }
-        page += 1;
-    } while (itemsCurrentPage != 0);
+        await Promise.all(promises);
+    } while (!lastPage);
     countCache[cacheKey] = count;
-    return count;
+    return total - count;
 }
 
 export const countMurals = async (limitDate) => {
@@ -68,15 +83,27 @@ export const getElements = async (metaqueryParams = "") => {
     }
     let elements = [];
     let page = 1;
-    const perpage = 100;
-    let itemsCurrentPage = 0;
+    let lastPage = false;
+    const PAGES_BATCH_SIZE = 10;
+    const PER_PAGE = 50;
     do {
-        const request = await fetch(COLLECTION_URL + `/items?perpage=${perpage}&paged=${page}&${metaqueryParams}&${await getFetchParameters()}`);
-        const json = await request.json();
-        json.items.forEach(element => elements.push(element));
-        itemsCurrentPage = json.items.length;
-        page += 1;
-    } while (itemsCurrentPage != 0);
+        lastPage = false;
+        const promises = [];
+        for (let i = 0; i < PAGES_BATCH_SIZE; i++) {
+            const fetchPage = async (currentPage) => {
+                const request = await fetch(COLLECTION_URL + `/items?perpage=${PER_PAGE}&paged=${currentPage}&${metaqueryParams}&${await getFetchParameters()}`);
+                const json = await request.json();
+                if (json.items.length > 0) {
+                    json.items.forEach(element => elements.push(element));
+                } else {
+                    lastPage = true;
+                }
+            }
+            promises.push(fetchPage(page));
+            page++;
+        }
+        await Promise.all(promises);
+    } while (!lastPage);
     elementsCache[metaqueryParams] = elements;
     return elements;
 }
