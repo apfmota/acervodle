@@ -8,6 +8,24 @@
   color: #1A1A1A;
 }
 
+/* Prefer dynamic viewport height on supported mobile browsers */
+@supports (height: 100dvh) {
+  .App {
+    min-height: 100dvh;
+  }
+}
+
+/* Guardrail: avoid accidental horizontal scrolling on narrow screens */
+@media (max-width: 768px) {
+  /* Use border-box sizing only on mobile to prevent width+border from causing horizontal overflow */
+  html { box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: inherit; }
+  
+  body, .App, .content {
+    overflow-x: hidden;
+  }
+}
+
 .background-overlay {
   position: fixed;
   top: 0;
@@ -534,6 +552,7 @@ h1 {
   
   .guess-form {
     flex-direction: column;
+    gap: 0.5rem; /* espaço entre input e botão para mobile */
   }
   
   .guess-input {
@@ -543,6 +562,23 @@ h1 {
   
   .guess-button {
     border-radius: 5px;
+    min-height: 44px; /* área de toque confortável */
+    font-size: 1rem;
+  }
+
+  /* Ajustes do react-select usados no formulário de palpite */
+  .react-select__control {
+    min-height: 44px;
+  }
+  .react-select__value-container,
+  .react-select__single-value,
+  .react-select__placeholder {
+    font-size: 1rem;
+  }
+
+  /* Garante que imagens não "estiquem" verticalmente */
+  .mural-image {
+    height: auto;
   }
 
   .characteristics-grid {
@@ -937,12 +973,58 @@ h1 {
 }
 
 @media (max-width: 480px) {
+  /* Mantém uma única fileira de 6 colunas com scroll horizontal estilo "narutodle" */
+  .attempts-grid {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 0.5rem; /* um respiro lateral para não colar na borda */
+  }
+
   .attempts-header,
   .attempt-row {
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(6, minmax(90px, 1fr)) !important; /* 6 colunas fixas responsivas */
+    gap: 0.5rem !important;
+    padding: 0 0.25rem !important;
+    min-width: 720px; /* garante que o conjunto seja mais largo que 390px e ative o scroll */
+    justify-items: center;
   }
-  .attempt-square { width: 46px; height: 46px; min-width:46px; min-height:46px; font-size:0.9rem; padding:4px; }
+  .attempt-square {
+    width: 100%;            /* ocupa a largura da coluna */
+    min-width: 90px;        /* combina com minmax da coluna */
+    max-width: 110px;       /* mantém tamanho confortável */
+    height: 56px; min-height:56px;
+    font-size:0.8rem; padding:4px;
+    margin: 0 auto;         /* garante centralização */
+  }
   .col-underline { height:4px; width:72%; }
+
+  /* Se o grid exceder a largura, permite rolagem horizontal suave */
+  /* já definido acima para evitar duplicação */
+
+  /* Deixa os títulos das colunas ainda mais compactos */
+  .col-title-text { font-size: 0.8rem; }
+
+  /* Ajusta o conteúdo textual dentro dos quadrados para não "quebrar" estranho */
+  .attempt-row .attempt-square > div:first-child {
+    font-size: 0.7rem;
+    line-height: 1.1;
+    width: 100% !important;
+    max-height: 38px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis;
+    white-space: nowrap !important; /* mostra uma linha apenas com reticências */
+  }
+
+  /* Esconde o badge de acerto parcial dentro do quadrado no mobile para caber melhor */
+  .attempt-row .attempt-square > div:nth-child(2) {
+    display: none !important;
+  }
+
+  /* Remove largura mínima dos títulos de coluna no mobile para alinhar com os quadrados */
+  .col-title {
+    min-width: 90px;   /* alinha a largura do título à coluna */
+    width: 100%;
+  }
 }
 
 .classic-enter-button {
@@ -1382,6 +1464,62 @@ h1 {
   100% { transform: scale(1); }
 }
 
+/* ---------- Mobile layout refinements for header and mode cards ---------- */
+@media (max-width: 768px) {
+  /* Reduce general padding on content wrapper */
+  .content { padding: 1rem; }
+
+  /* Title box and heading scale down so they don't overflow */
+  .title-box { padding: 0.8rem 1.2rem; max-width: calc(100% - 2rem); }
+  h1 { font-size: clamp(2rem, 7vw, 2.6rem); letter-spacing: 1px; }
+
+  /* Subtitle becomes compact and centered with safe width */
+  .subtitle {
+    font-size: 1.05rem;
+    line-height: 1.3;
+    max-width: 90vw;
+    margin: 0.25rem auto 0;
+    text-align: center;
+  }
+
+  /* Mode cards become fluid and paddings shrink */
+  .modes-container { padding: 1rem; padding-top: 0.5rem; gap: 1rem; }
+  .mode-card { width: 100%; max-width: 320px; margin: 0 auto; padding: 1.25rem 1rem; }
+  .mode-card h2 { font-size: clamp(1.25rem, 5.5vw, 1.6rem); }
+  .mode-card p { font-size: 1rem; line-height: 1.4; margin: 0.5rem 0 0; }
+
+  /* Header spacing */
+  .header { margin-bottom: 1.25rem; }
+
+  /* Utility icons: centralizados e com espaçamento menor */
+  .utility-icons {
+    justify-content: center;   /* deixa os ícones próximos no centro */
+    gap: 0.85rem;              /* espaçamento confortável */
+    padding: 0.85rem;          /* padding menor para caber melhor */
+    width: max-content;        /* caixa se ajusta ao conteúdo */
+    max-width: 90vw;           /* ainda respeita a viewport */
+  }
+}
+
+@media (max-width: 480px) {
+  .modes-container { padding: 0.85rem; gap: 0.85rem; }
+  .mode-card { max-width: 292px; }
+  .mode-card h2 { font-size: 1.4rem; }
+  .mode-card p { font-size: 0.95rem; }
+  .title-box { padding: 0.6rem 1rem; max-width: calc(100% - 1.5rem); }
+  .subtitle { font-size: 1rem; }
+  h1 { font-size: clamp(1.8rem, 8vw, 2.2rem); }
+
+  /* Em telas muito estreitas, mantenha os ícones bem próximos e a caixa ajustada ao conteúdo */
+  .utility-icons {
+    gap: 0.7rem;       /* ainda mais próximos em 360px */
+    width: max-content;
+    max-width: 90vw;
+  }
+
+  .utility-icon { font-size: 1.6rem; }
+}
+
 /* Responsividade */
 @media (max-width: 768px) {
   .hints-container {
@@ -1399,15 +1537,25 @@ h1 {
 }
 
 @media (max-width: 480px) {
+  /* Mantém as dicas lado a lado no mobile */
   .hints-container {
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: center;
     align-items: center;
-    gap: 1.5rem;
+    gap: 0.75rem;
+    flex-wrap: nowrap;
   }
-  
+
+  /* Cada dica ocupa apenas o espaço do ícone */
   .hint-item {
-    width: 100%;
-    max-width: 200px;
+    width: auto;
+    max-width: none;
+  }
+
+  /* Reduz levemente o ícone para caber confortavelmente */
+  .hint-icon {
+    width: 36px;
+    height: 36px;
   }
 }
 
@@ -1594,6 +1742,7 @@ h1 {
   position: relative;
   color: #1A1A1A;
   box-shadow: 0 10px 25px rgba(0, 82, 133, 0.2);
+  box-sizing: border-box; /* Inclui padding na largura para evitar encolhimento do grid em telas menores */
 }
 
 .calendar-header {
@@ -1667,6 +1816,13 @@ h1 {
   font-weight: 500;
 }
 
+.calendar-day.already-won {
+  background-color: #12f79f;
+  color: #00350d;
+  cursor: pointer;
+  font-weight: 500;
+}
+
 .calendar-day.playable:hover {
   background-color: #C8E0F2;
   transform: scale(1.1);
@@ -1678,6 +1834,46 @@ h1 {
   font-weight: 700;
   transform: scale(1.1);
   box-shadow: 0 4px 10px rgba(0, 82, 133, 0.3);
+}
+
+/* Ajustes de responsividade para telas estreitas (ex.: 360x740 - Galaxy S8+) */
+@media (max-width: 380px) {
+  .calendar-modal {
+    padding: 1rem; /* reduz padding para liberar espaço ao grid */
+  }
+
+  .calendar-header {
+    margin-bottom: 1rem;
+  }
+
+  .calendar-month-year {
+    font-size: 1.25rem;
+  }
+
+  .calendar-grid {
+    gap: 0.35rem; /* gaps menores para caber 7 colunas confortáveis */
+  }
+
+  .calendar-day-header {
+    padding: 0.25rem 0;
+    font-size: 0.85rem;
+  }
+
+  /* Torna os dias perfeitamente quadrados e centralizados, sem depender de altura fixa */
+  .calendar-day {
+    padding: 0;
+    height: auto;
+    aspect-ratio: 1 / 1; /* garante quadrado conforme a coluna do grid */
+    display: grid;
+    place-items: center;
+    font-size: 0.95rem;
+  }
+
+  /* Reduz o efeito de escala para evitar "quebrar" o alinhamento em colunas estreitas */
+  .calendar-day.selected,
+  .calendar-day.playable:hover {
+    transform: scale(1.05);
+  }
 }
 
 .calendar-day.selected:hover {

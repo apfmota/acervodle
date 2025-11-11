@@ -9,7 +9,8 @@ const VictoryModal = ({
   artworkTitle, 
   artworkImage, 
   attemptsCount, 
-  gameType, 
+  gameType,
+  alreadyWon,
   onGuessLocation, // 1. ADICIONADA NOVA PROP
   isLocationVictory = false // 1. ADICIONE A NOVA PROP COM VALOR PADRÃO
 }) => {
@@ -73,7 +74,7 @@ const VictoryModal = ({
 
         {/* 2. TÍTULO E SUBTÍTULO CONDICIONAIS */}
         <h2 className="victory-modal-title">
-          {isLocationVictory ? 'Localização Correta!' : 'Você acertou!'}
+          {isLocationVictory ? 'Localização Correta!' : (alreadyWon ? 'Você já acertou essa obra' : 'Você acertou!')}
         </h2>
         <p className="victory-modal-subtitle">
           {isLocationVictory ? 'Você encontrou a obra:' : `A ${gameName} era`} <strong>{artworkTitle}</strong>
@@ -81,14 +82,16 @@ const VictoryModal = ({
 
         <img src={artworkImage} alt={artworkTitle} className="victory-modal-image" />
 
-        <div className="victory-modal-stats-container">
-          <p className="victory-modal-stats">
-            Você é a <strong>{randomPlayerNumber}º</strong> pessoa a acertar hoje!
-          </p>
-          <p className="victory-modal-stats">
-            Número de tentativas: <strong>{attemptsCount}</strong>
-          </p>
-        </div>
+        {!alreadyWon && (
+          <div className="victory-modal-stats-container">
+            <p className="victory-modal-stats">
+              Você é a <strong>{randomPlayerNumber}º</strong> pessoa a acertar hoje!
+            </p>
+            <p className="victory-modal-stats">
+              Número de tentativas: <strong>{attemptsCount}</strong>
+            </p>
+          </div>
+        )}
         
         {/* 3. BOTÕES RENDERIZADOS EM UM CONTAINER FLEX */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
@@ -97,7 +100,7 @@ const VictoryModal = ({
           </button>
 
           {/* 4. RENDERIZAÇÃO CONDICIONAL DO BOTÃO DE LOCALIZAÇÃO */}
-          {(gameType === 'mural' || gameType === 'sculpture') && !isLocationVictory && (
+          {(gameType === 'mural' || gameType === 'sculpture') && !isLocationVictory && !alreadyWon && (
             <button 
               className="victory-stats-button" 
               onClick={handleLocationClick} 

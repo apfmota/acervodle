@@ -30,6 +30,7 @@ export const fillTitles = async (type) => {
 }
 
 export const fillPossibleValues = async () => {
+    const initialDate = new Date();
     const allArts = await getAllArts();
     for (const art of allArts) {
         const artValues = getArtProperties(art);
