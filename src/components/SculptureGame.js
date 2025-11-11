@@ -75,11 +75,13 @@ const SculptureGame = ({ loadingArt }) => {
 
   const selectOptions = useMemo(
     () =>
-      allSculptureTitles.map((title) => ({
-        value: title,
-        label: title,
-      })),
-    [allSculptureTitles]
+      allSculptureTitles
+        .filter((title) => !attempts.includes(title)) // Remove tentativas já feitas
+        .map((title) => ({
+          value: title,
+          label: title,
+        })),
+    [allSculptureTitles, attempts]
   );
 
   const handleSubmit = (e) => {
@@ -102,9 +104,11 @@ const SculptureGame = ({ loadingArt }) => {
   };
 
   const filterOptionByPrefix = (option, inputValue) => {
+    // Se não digitou nada, mostra todas as opções
     if (inputValue === '') {
-      return false;
+      return true;
     }
+    // Se digitou algo, filtra por prefixo
     return option.label.toLowerCase().startsWith(inputValue.toLowerCase());
   };
 
