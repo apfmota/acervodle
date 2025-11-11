@@ -1,14 +1,22 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaCheck, FaMapMarkerAlt, FaCalendarAlt } from 'react-icons/fa';
-import { titleSet, fillTitles } from '../util/ClassicModeDataFetch';
+import {
+  FaPalette,
+  FaPaintBrush,
+  FaMonument,
+  FaChartBar,
+  FaQuestion,
+  FaCalendarAlt,
+} from 'react-icons/fa';
+import { fillTitles } from '../util/ClassicModeDataFetch';
 import Select from 'react-select';
 import { getSculptureArtByDate } from '../util/DailyArt';
-import { todayMidnight } from './DatePicker'; 
-import CalendarModal from './CalendarModal'; 
-import VictoryAnimation from './VictoryAnimation'; 
-import VictoryModal from './VictoryModal'; 
-import PostVictoryDisplay from './PostVictoryDisplay'; // ADICIONADO
+import { todayMidnight } from './DatePicker';
+import CalendarModal from './CalendarModal';
+import VictoryAnimation from './VictoryAnimation';
+import VictoryModal from './VictoryModal';
+import PostVictoryDisplay from './PostVictoryDisplay';
+import { getStatsByDate, recordGameHit } from '../util/Statistics';
 
 const SculptureGame = ({ loadingArt }) => {
   const [sculptureArt, setSculptureArt] = useState();
@@ -17,18 +25,13 @@ const SculptureGame = ({ loadingArt }) => {
   const [attempts, setAttempts] = useState([]);
   const [hasWon, setHasWon] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
-  const navigate = useNavigate();
-
   const [showCalendar, setShowCalendar] = useState(false);
   const [currentDate, setCurrentDate] = useState(todayMidnight());
-  
-  // ESTADOS DE VITÓRIA ATUALIZADOS
   const [showVictoryAnimation, setShowVictoryAnimation] = useState(false);
   const [showVictoryModal, setShowVictoryModal] = useState(false);
-
-  // Números aleatórios para os placeholders
-  const randomPlayers = Math.floor(Math.random() * 1000) + 100;
-  const yesterdaySculpture = 'Escultura ' + (Math.floor(Math.random() * 10) + 1);
+  const [todayHits, setTodayHits] = useState(0);
+  const [yesterdaySculpture, setYesterdaySculpture] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadingArt.then(setSculptureArt);
@@ -39,9 +42,8 @@ const SculptureGame = ({ loadingArt }) => {
     };
 
     loadTitles();
-  }, [loadingArt]); // Adicionada dependência
+  }, [loadingArt]);
 
-  // USEEFFECT DE VITÓRIA ATUALIZADO
   useEffect(() => {
     if (hasWon) {
       setShowVictoryAnimation(true);
@@ -49,20 +51,20 @@ const SculptureGame = ({ loadingArt }) => {
     }
   }, [hasWon]);
 
-
   const changeDate = (date) => {
-    getSculptureArtByDate(date).then(art => {
+    getSculptureArtByDate(date).then((art) => {
       setSculptureArt(art);
       setAttempts([]);
-      setGuess("");
+      setGuess('');
       setHasWon(false);
-      // RESET ATUALIZADO
       setShowVictoryAnimation(false);
       setShowVictoryModal(false);
     });
-    setCurrentDate(date); 
-    setShowCalendar(false); 
-  }
+
+    setCurrentDate(date);
+    setShowCalendar(false);
+    setTodayHits(0);
+  };
 
   const selectOptions = useMemo(
     () =>
@@ -73,13 +75,58 @@ const SculptureGame = ({ loadingArt }) => {
     [allSculptureTitles]
   );
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!currentDate) return;
+
+      const dateString = currentDate.toISOString().split('T')[0];
+      try {
+        const statsDoc = await getStatsByDate(dateString);
+
+        if (statsDoc && statsDoc.sculptureGame) {
+          setTodayHits(statsDoc.sculptureGame.hits);
+        } else {
+          setTodayHits(0);
+        }
+      } catch (error) {
+        console.error('Falha ao buscar estatísticas:', error);
+        setTodayHits(0);
+      }
+    };
+
+    const fetchYesterdayArt = () => {
+      const yesterday = new Date(currentDate.getTime());
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      getSculptureArtByDate(yesterday)
+        .then((art) => {
+          if (art) setYesterdaySculpture(art.title);
+        })
+        .catch((err) => console.error('Erro ao buscar arte de ontem:', err));
+    };
+
+    fetchStats();
+    fetchYesterdayArt();
+  }, [currentDate]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (guess.trim() && sculptureArt) {
+    if (guess.trim() && sculptureArt && !hasWon) {
       const isCorrect = guess.toLowerCase() === sculptureArt.title.toLowerCase();
 
       if (isCorrect) {
-        setHasWon(true); // Isso vai disparar o useEffect de vitória
+        setHasWon(true);
+        try {
+          const dateString = currentDate.toISOString().split('T')[0];
+          recordGameHit({
+            date: dateString,
+            gameMode: 'sculptureGame',
+            artname: sculptureArt.title,
+          });
+          setTodayHits((prevHits) => prevHits + 1);
+        } catch (error) {
+          console.error('Erro ao registrar o hit:', error);
+        }
       } else {
         setAttempts([guess, ...attempts]);
         setGuess('');
@@ -92,20 +139,21 @@ const SculptureGame = ({ loadingArt }) => {
   };
 
   const filterOptionByPrefix = (option, inputValue) => {
-    if (inputValue === '') {
-      return false;
-    }
+    if (inputValue === '') return false;
     return option.label.toLowerCase().startsWith(inputValue.toLowerCase());
   };
 
-  // Define a imagem correta para o modal
-  const victoryImage = sculptureArt ? `/acervo_imgs/${sculptureArt.title.replace(/\s+/g, '_')}.jpg` : '';
+  const victoryImage = sculptureArt
+    ? `/acervo_imgs/${sculptureArt.title.replace(/\s+/g, '_')}.jpg`
+    : '';
 
   return (
     <div className="game-page">
-      {/* COMPONENTES DE VITÓRIA ADICIONADOS */}
-      {showVictoryAnimation && <VictoryAnimation onComplete={() => setShowVictoryAnimation(false)} />}
-      
+      {/* Componentes de vitória */}
+      {showVictoryAnimation && (
+        <VictoryAnimation onComplete={() => setShowVictoryAnimation(false)} />
+      )}
+
       <VictoryModal
         isOpen={showVictoryModal}
         onClose={() => setShowVictoryModal(false)}
@@ -116,14 +164,14 @@ const SculptureGame = ({ loadingArt }) => {
         onGuessLocation={handleGuessLocation}
       />
 
-      {/* Logo com link para home */}
+      {/* Logo */}
       <Link to="/" className="logo-link">
         <div className="title-box" style={{ transform: 'scale(0.8)', cursor: 'pointer' }}>
           <h1>Acervodle</h1>
         </div>
       </Link>
 
-      {/* Ícones dos modos de jogo */}
+      {/* Ícones dos modos */}
       <div className="modes-icons">
         <Link to="/classic" className="mode-icon-link">
           <div className="icon-circle">
@@ -166,49 +214,49 @@ const SculptureGame = ({ loadingArt }) => {
         </div>
       </div>
 
-      {/* Área da imagem */}
+      {/* Imagem */}
       <div className="mural-container">
         <h3 className="mural-question">Qual é o nome desta escultura?</h3>
         <div className="image-wrapper">
           {sculptureArt && (
-            <img 
-              src={hasWon 
-                ? victoryImage 
-                : `/acervo_imgs/${sculptureArt.title.replace(/\s+/g, '_')}-mask.jpg`
+            <img
+              src={
+                hasWon
+                  ? victoryImage
+                  : `/acervo_imgs/${sculptureArt.title.replace(/\s+/g, '_')}-mask.jpg`
               }
-              alt={hasWon ? "Escultura revelada" : "Silhueta da escultura"}
+              alt={hasWon ? 'Escultura revelada' : 'Silhueta da escultura'}
               className="mural-image"
-              style={{ 
-                maxWidth: '100%', 
+              style={{
+                maxWidth: '100%',
                 height: 'auto',
                 border: '2px solid #ddd',
-                borderRadius: '8px'
+                borderRadius: '8px',
               }}
             />
           )}
-          
         </div>
       </div>
 
-      {/* Estatísticas */}
-      <p className="stats-text">{randomPlayers} pessoas já acertaram esta escultura!</p>
+      <p className="stats-text">{todayHits} pessoas já acertaram esta escultura!</p>
 
-      {/* LÓGICA DE EXIBIÇÃO ATUALIZADA */}
+      {/* Tentativas / vitória */}
       {!hasWon ? (
         <form onSubmit={handleSubmit} className="guess-form">
           <Select
             options={selectOptions}
             value={selectOptions.find((option) => option.value === guess)}
-            onChange={(selectedOption) => setGuess(selectedOption ? selectedOption.value : '')}
+            onChange={(selectedOption) =>
+              setGuess(selectedOption ? selectedOption.value : '')
+            }
             placeholder="Digite sua tentativa..."
             className="guess-input-select"
             classNamePrefix="react-select"
             filterOption={filterOptionByPrefix}
-            noOptionsMessage={() => null} 
+            noOptionsMessage={() => null}
             isDisabled={hasWon}
             isClearable
           />
-
           <button type="submit" className="guess-button" disabled={hasWon}>
             ENTER
           </button>
@@ -218,11 +266,9 @@ const SculptureGame = ({ loadingArt }) => {
           gameType="sculpture"
           artworkTitle={sculptureArt?.title}
           onGuessLocation={handleGuessLocation}
-          onShowStats={() => setShowVictoryModal(true)} // Reabre o modal
+          onShowStats={() => setShowVictoryModal(true)}
         />
       )}
-
-      {/* Mensagem de sucesso ANTIGA REMOVIDA */}
 
       {/* Tentativas erradas */}
       <div className="attempts-list">
@@ -244,8 +290,9 @@ const SculptureGame = ({ loadingArt }) => {
         ))}
       </div>
 
-      {/* Escultura de ontem */}
-      <p className="yesterday-text">A escultura de ontem foi: {yesterdaySculpture}</p>
+      <p className="yesterday-text">
+        A escultura de ontem foi: {yesterdaySculpture}
+      </p>
 
       <CalendarModal
         isOpen={showCalendar}
@@ -264,22 +311,25 @@ const SculptureGame = ({ loadingArt }) => {
             <h2 className="tutorial-title">Como jogar?</h2>
             <hr className="tutorial-divider" />
             <p className="tutorial-text">
-              No modo Escultura, seu desafio é identificar a escultura do dia a partir de sua{' '}
-              <strong>imagem em silhueta</strong>.
+              No modo Escultura, seu desafio é identificar a escultura do dia a
+              partir de sua <strong>imagem em silhueta</strong>.
             </p>
             <p className="tutorial-text">
-              A escultura é mostrada como uma <strong>silhueta escura</strong> em uma fotografia. Você
-              precisa reconhecer a obra pela sua <strong>forma, contorno e características</strong>.
+              A escultura é mostrada como uma <strong>silhueta escura</strong> em
+              uma fotografia. Você precisa reconhecer a obra pela sua{' '}
+              <strong>forma, contorno e características</strong>.
             </p>
             <h3 className="tutorial-subtitle">Fase Bônus: Localização</h3>
             <hr className="tutorial-divider" />
             <p className="tutorial-text">
-              Após acertar a escultura, você desbloqueia uma <strong>fase bônus</strong>: adivinhar a
-              localização dentro do campus da UFSM!
+              Após acertar a escultura, você desbloqueia uma{' '}
+              <strong>fase bônus</strong>: adivinhar a localização dentro do campus
+              da UFSM!
             </p>
             <p className="tutorial-text">
-              Nesta fase, você verá um <strong>mapa do campus</strong> com várias marcações. Sua missão
-              é clicar no local correto onde a escultura está instalada.
+              Nesta fase, você verá um <strong>mapa do campus</strong> com várias
+              marcações. Sua missão é clicar no local correto onde a escultura está
+              instalada.
             </p>
           </div>
         </div>

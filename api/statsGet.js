@@ -15,9 +15,8 @@ export default async function handler(req, res) {
 
   try {
     const client = await clientPromise;
-    const db = client.db(process.env.MONGODB_DATABASE); 
-    const collection = db.collection(process.env.MONGODB_COLLECTION);
-
+    const db = client.db();
+    const collection = db.collection("daily_stats");
     const statsDocument = await collection.findOne({ _id: date });
 
     res.status(200).json(statsDocument);

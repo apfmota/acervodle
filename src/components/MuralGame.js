@@ -8,16 +8,17 @@ import {
   FaQuestion,
   FaCheck,
   FaMapMarkerAlt,
-  FaCalendarAlt 
+  FaCalendarAlt,
 } from 'react-icons/fa';
 import { titleSet, fillTitles } from '../util/ClassicModeDataFetch';
 import Select from 'react-select';
 import { getMuralArtByDate } from '../util/DailyArt';
-import { todayMidnight } from './DatePicker'; 
-import CalendarModal from './CalendarModal'; 
-import VictoryAnimation from './VictoryAnimation'; 
-import VictoryModal from './VictoryModal'; 
-import PostVictoryDisplay from './PostVictoryDisplay'; // ADICIONADO
+import { todayMidnight } from './DatePicker';
+import CalendarModal from './CalendarModal';
+import VictoryAnimation from './VictoryAnimation';
+import VictoryModal from './VictoryModal';
+import PostVictoryDisplay from './PostVictoryDisplay';
+import { getStatsByDate, recordGameHit } from '../util/Statistics';
 
 const MuralGame = ({ loadingArt }) => {
   const [muralArt, setMuralArt] = useState();
@@ -33,13 +34,12 @@ const MuralGame = ({ loadingArt }) => {
 
   const [showCalendar, setShowCalendar] = useState(false);
   const [currentDate, setCurrentDate] = useState(todayMidnight());
-  
-  // ESTADOS DE VITÓRIA ATUALIZADOS
+
+  // Estados de vitória
   const [showVictoryAnimation, setShowVictoryAnimation] = useState(false);
   const [showVictoryModal, setShowVictoryModal] = useState(false);
 
-  const randomPlayers = Math.floor(Math.random() * 1000) + 100;
-
+  const [todayHits, setTodayHits] = useState(0);
   const [showTutorial, setShowTutorial] = useState(false);
 
   useEffect(() => {
@@ -51,9 +51,8 @@ const MuralGame = ({ loadingArt }) => {
     };
 
     loadTitles();
-  }, [loadingArt]); // Adicionada dependência
+  }, [loadingArt]);
 
-  // USEEFFECT DE VITÓRIA ATUALIZADO
   useEffect(() => {
     if (hasWon) {
       setShowVictoryAnimation(true);
@@ -62,30 +61,45 @@ const MuralGame = ({ loadingArt }) => {
   }, [hasWon]);
 
   const changeDate = (date) => {
-    getMuralArtByDate(date).then(art => {
+    getMuralArtByDate(date).then((art) => {
       setMuralArt(art);
-      setGuess("");
+      setGuess('');
       setAttempts([]);
       setZoom(800);
       setXPosition((Math.random() * 100) % 100);
       setYPosition((Math.random() * 100) % 100);
       setHasWon(false);
-      // RESET ATUALIZADO
       setShowVictoryAnimation(false);
       setShowVictoryModal(false);
     });
-    setCurrentDate(date); 
-    setShowCalendar(false); 
-  }
 
-  const handleSubmit = (e) => {
+    setCurrentDate(date);
+    setShowCalendar(false);
+    setTodayHits(0);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (guess.trim() && muralArt) {
+    if (guess.trim() && muralArt && !hasWon) {
       const isCorrect = guess.toLowerCase() === muralArt.title.toLowerCase();
 
       if (isCorrect) {
-        setHasWon(true); // Isso vai disparar o useEffect de vitória
+        setHasWon(true);
         setZoom(100);
+
+        try {
+          const dateString = currentDate.toISOString().split('T')[0];
+
+          await recordGameHit({
+            date: dateString,
+            gameMode: 'muralGame',
+            artname: muralArt.title,
+          });
+
+          setTodayHits((prevHits) => prevHits + 1);
+        } catch (error) {
+          console.error('Erro ao registrar o hit:', error);
+        }
       } else {
         setZoom(Math.max(100, zoom - 80));
         setAttempts([guess, ...attempts]);
@@ -93,6 +107,29 @@ const MuralGame = ({ loadingArt }) => {
       }
     }
   };
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!currentDate) return;
+
+      const dateString = currentDate.toISOString().split('T')[0];
+      try {
+        const statsDoc = await getStatsByDate(dateString);
+
+        if (statsDoc && statsDoc.muralGame) {
+          setTodayHits(statsDoc.muralGame.hits);
+        } else {
+          console.debug('Nenhum hit registrado para este dia');
+          setTodayHits(0);
+        }
+      } catch (error) {
+        console.error('Falha ao buscar estatísticas:', error);
+        setTodayHits(0);
+      }
+    };
+
+    fetchStats();
+  }, [currentDate]);
 
   const selectOptions = useMemo(
     () =>
@@ -104,9 +141,7 @@ const MuralGame = ({ loadingArt }) => {
   );
 
   const filterOptionByPrefix = (option, inputValue) => {
-    if (inputValue === '') {
-      return false;
-    }
+    if (inputValue === '') return false;
     return option.label.toLowerCase().startsWith(inputValue.toLowerCase());
   };
 
@@ -118,9 +153,11 @@ const MuralGame = ({ loadingArt }) => {
 
   return (
     <div className="game-page">
-      {/* COMPONENTES DE VITÓRIA ADICIONADOS */}
-      {showVictoryAnimation && <VictoryAnimation onComplete={() => setShowVictoryAnimation(false)} />}
-      
+      {/* Componentes de vitória */}
+      {showVictoryAnimation && (
+        <VictoryAnimation onComplete={() => setShowVictoryAnimation(false)} />
+      )}
+
       <VictoryModal
         isOpen={showVictoryModal}
         onClose={() => setShowVictoryModal(false)}
@@ -131,7 +168,7 @@ const MuralGame = ({ loadingArt }) => {
         onGuessLocation={handleGuessLocation}
       />
 
-      {/* Logo com link para home */}
+      {/* Logo */}
       <Link to="/" className="logo-link">
         <div className="title-box" style={{ transform: 'scale(0.8)', cursor: 'pointer' }}>
           <h1>Acervodle</h1>
@@ -197,10 +234,10 @@ const MuralGame = ({ loadingArt }) => {
         <p className="mural-hint">A cada tentativa expande um pouco</p>
       </div>
 
-      {/* Texto de estatísticas */}
-      <p className="stats-text">{randomPlayers} pessoas já acertaram este mural!</p>
+      {/* Estatísticas */}
+      <p className="stats-text">{todayHits} pessoas já acertaram este mural!</p>
 
-      {/* LÓGICA DE EXIBIÇÃO ATUALIZADA */}
+      {/* Lógica de exibição */}
       {!hasWon ? (
         <form onSubmit={handleSubmit} className="guess-form">
           <Select
@@ -215,7 +252,6 @@ const MuralGame = ({ loadingArt }) => {
             isDisabled={hasWon}
             isClearable
           />
-
           <button type="submit" className="guess-button" disabled={hasWon}>
             ENTER
           </button>
@@ -225,11 +261,9 @@ const MuralGame = ({ loadingArt }) => {
           gameType="mural"
           artworkTitle={muralArt?.title}
           onGuessLocation={handleGuessLocation}
-          onShowStats={() => setShowVictoryModal(true)} // Reabre o modal
+          onShowStats={() => setShowVictoryModal(true)}
         />
       )}
-
-      {/* Mensagem de sucesso ANTIGA REMOVIDA */}
 
       {/* Tentativas erradas */}
       <div className="attempts-list">
@@ -262,7 +296,9 @@ const MuralGame = ({ loadingArt }) => {
       {showTutorial && (
         <div className="tutorial-modal-overlay" onClick={() => setShowTutorial(false)}>
           <div className="tutorial-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="tutorial-close" onClick={() => setShowTutorial(false)}>X</button>
+            <button className="tutorial-close" onClick={() => setShowTutorial(false)}>
+              X
+            </button>
             <h2 className="tutorial-title">Como jogar? (Modo Mural)</h2>
             <hr className="tutorial-divider" />
             <p className="tutorial-text">
