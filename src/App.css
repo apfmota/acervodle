@@ -992,8 +992,8 @@ h1 {
     width: 100%;            /* ocupa a largura da coluna */
     min-width: 90px;        /* combina com minmax da coluna */
     max-width: 110px;       /* mantém tamanho confortável */
-    height: 56px; min-height:56px;
-    font-size:0.8rem; padding:4px;
+    height: 66px; min-height: 66px;
+    font-size: 0.8rem; padding: 4px 2px;
     margin: 0 auto;         /* garante centralização */
   }
   .col-underline { height:4px; width:72%; }
@@ -1004,20 +1004,35 @@ h1 {
   /* Deixa os títulos das colunas ainda mais compactos */
   .col-title-text { font-size: 0.8rem; }
 
-  /* Ajusta o conteúdo textual dentro dos quadrados para não "quebrar" estranho */
-  .attempt-row .attempt-square > div:first-child {
-    font-size: 0.7rem;
-    line-height: 1.1;
+  /* Ajusta o conteúdo textual dentro dos quadrados para quebrar de forma legível */
+  .attempt-text-content {
+    font-size: 0.65rem !important;
+    line-height: 1.15 !important;
     width: 100% !important;
-    max-height: 38px !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis;
-    white-space: nowrap !important; /* mostra uma linha apenas com reticências */
+    max-height: 58px !important; /* limita altura para permitir scroll */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    white-space: normal !important; /* permite quebra de linha */
+    word-break: break-word !important;
   }
 
-  /* Esconde o badge de acerto parcial dentro do quadrado no mobile para caber melhor */
-  .attempt-row .attempt-square > div:nth-child(2) {
-    display: none !important;
+  /* Badge de acerto parcial no mobile - sempre visível mas menor */
+  .partial-match-badge {
+    font-size: 0.65rem !important;
+    padding: 2px 4px !important;
+    top: 2px !important;
+    right: 2px !important;
+  }
+
+  /* Reduz o losango de década no mobile para não quebrar o layout */
+  .decade-arrow {
+    width: 15px !important;
+    height: 15px !important;
+    margin-top: 0.25rem !important;
+  }
+  
+  .decade-arrow svg {
+    font-size: 8px !important;
   }
 
   /* Remove largura mínima dos títulos de coluna no mobile para alinhar com os quadrados */
