@@ -113,17 +113,21 @@ const MuralGame = ({ loadingArt }) => {
 
   const selectOptions = useMemo(
     () =>
-      allMuralTitles.map((title) => ({
-        value: title,
-        label: title,
-      })),
-    [allMuralTitles]
+      allMuralTitles
+        .filter((title) => !attempts.includes(title)) // Remove tentativas já feitas
+        .map((title) => ({
+          value: title,
+          label: title,
+        })),
+    [allMuralTitles, attempts]
   );
 
   const filterOptionByPrefix = (option, inputValue) => {
+    // Se não digitou nada, mostra todas as opções
     if (inputValue === '') {
-      return false;
+      return true;
     }
+    // Se digitou algo, filtra por prefixo
     return option.label.toLowerCase().startsWith(inputValue.toLowerCase());
   };
 
