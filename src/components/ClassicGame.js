@@ -11,6 +11,7 @@ import VictoryAnimation from './VictoryAnimation';
 import VictoryModal from './VictoryModal'; 
 import PostVictoryDisplay from './PostVictoryDisplay'; 
 import { getStatsByDate, recordGameHit } from '../util/Statistics';
+import StreakManager from '../util/StreakManager.js';
 
 const ClassicGame = ({ loadingArt, loadingOptions }) => {
   const [classicArt, setClassicArt] = useState();
