@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaLightbulb, FaSpinner, FaCalendarAlt, FaFire } from 'react-icons/fa'; 
+import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaLightbulb, FaSpinner, FaCalendarAlt, FaFire, FaArrowDown, FaArrowUp } from 'react-icons/fa';
 import Select from 'react-select';
 import { fillPossibleValues, getAllPossibleValues, getArtProperties } from '../util/ClassicModeDataFetch.js';
 import obraExemplo from '../assets/obra_exemplo.jpg';
@@ -484,10 +484,20 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
             {properties.map((field) => {
               const value = attempt[field.property] || '';
               const valueAsString = (!value || (Array.isArray(value) && value.length === 0)) ? '-' : value.join(", ");
-              const correct = checkCorrect(field.property, value);
+                const correct = checkCorrect(field.property, value);
               const partiallyCorrect = checkPartiallyCorrect(field.property, value);
+              
+              // Verifica se precisa mostrar seta de década
+              const isDecadeField = field.property === "data-da-obra-2";
+              const showArrow = isDecadeField && answer && answer[field.property] && !correct && value && value.length > 0;
+              const arrowDirection = showArrow && value[0] > answer[field.property][0] ? 'down' : 'up';
+              
+              // Verifica se tem múltiplos valores corretos (mostra badge mesmo quando acerta)
+              const hasMultipleValues = answer && answer[field.property] && answer[field.property].length > 1;
+              const showBadge = hasMultipleValues && partiallyCorrect;
+              
               return (
-                <div key={field.property} className={`attempt-square ${correct ? 'correct' : (partiallyCorrect ? 'partially' : 'wrong')}`} 
+                <div key={field.property} className={`attempt-square ${correct ? 'correct' : (partiallyCorrect ? 'partially' : 'wrong')}`}
                   style={{
                     padding: '0.75rem',
                     textAlign: 'center',
@@ -496,35 +506,70 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    wordBreak: 'break-word'
+                    wordBreak: 'break-word',
+                    position: 'relative',
+                    flexDirection: showArrow ? 'column' : 'row',
+                    gap: showArrow ? '0.25rem' : '0'
                   }}
                   title={`${field.label}: ${valueAsString}`}>
-                  <div style={{
-                    width: '70%',
+                  
+                  {/* Badge de acerto parcial - posicionado no topo direito */}
+                  {showBadge && (
+                    <div className="partial-match-badge" style={{
+                      position: 'absolute',
+                      top: '4px',
+                      right: '4px',
+                      fontWeight: 'bold',
+                      backgroundColor: correct ? '#4caf50' : '#ff8800ff',
+                      padding: '3px 6px',
+                      borderRadius: '3px',
+                      color: correct ? '#fff' : '#000000ff',
+                      fontSize: '0.75rem',
+                      lineHeight: '1',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                    }}>{partiallyCorrectTips(field.property, value)}</div>
+                  )}
+                  
+                  <div className="attempt-text-content" style={{
+                    width: showArrow ? '100%' : (showBadge ? '100%' : '70%'),
                     wordBreak: 'break-word',
-                    overflowY: 'scroll',
+                    overflowY: 'auto',
                     whiteSpace: 'normal',
-                    maxHeight: '50px'
+                    maxHeight: showArrow ? '40px' : '50px',
+                    textAlign: 'center',
+                    paddingRight: showBadge ? '35px' : '0'
                   }}>
                     {valueAsString}
                   </div>
-                  {(!correct && partiallyCorrect) && (
-                    <div style={{
-                      fontWeight: 'bold',
-                      margin: '10px',
-                      backgroundColor: '#ff8800ff',
-                      padding: '5px',
-                      borderRadius: '3px',
-                      color: '#000000ff'
-                    }}>{partiallyCorrectTips(field.property, value)}</div>
-                  )}
-                  {field.property == "data-da-obra-2" && answer && answer[field.property] && ( 
-                    <div>
-                      {value[0] > answer[field.property][0] && (
-                        <span style={{ marginLeft: '6px', color: '#2196f3', fontSize: '1.2em' }}>&darr;</span>
-                      )}
-                      {value[0] < answer[field.property][0] && (
-                        <span style={{ marginLeft: '6px', color: '#2196f3', fontSize: '1.2em' }}>&uarr;</span>
+                  
+                  {/* Seta de década estilo LoLdle */}
+                  {showArrow && (
+                    <div className="decade-arrow" style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '26px',
+                      height: '26px',
+                      borderRadius: '4px',
+                      background: '#005285',
+                      transform: 'rotate(45deg)',
+                      boxShadow: '0 3px 8px rgba(0, 82, 133, 0.4)',
+                      marginTop: '0.4rem'
+                    }}>
+                      {arrowDirection === 'down' ? (
+                        <FaArrowDown style={{ 
+                          color: '#fff', 
+                          fontSize: '11px', 
+                          transform: 'rotate(-45deg)',
+                          fontWeight: 'bold'
+                        }} />
+                      ) : (
+                        <FaArrowUp style={{ 
+                          color: '#fff', 
+                          fontSize: '11px', 
+                          transform: 'rotate(-45deg)',
+                          fontWeight: 'bold'
+                        }} />
                       )}
                     </div>
                   )}

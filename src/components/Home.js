@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 
 const Home = () => {
+  /* CÓDIGO COMENTADO - Disclaimer/Aviso Mobile (removido temporariamente)
+   * Descomente caso queira reativar o pop-up de aviso para dispositivos móveis
+   * 
   const [showMobileWarning, setShowMobileWarning] = useState(false);
 
   useEffect(() => {
@@ -18,10 +21,11 @@ const Home = () => {
   const handleCloseWarning = () => {
     setShowMobileWarning(false);
   };
+  */
 
   return (
     <div className="content">
-      {/* Pop-up de aviso para mobile */}
+      {/* MODAL DE AVISO MOBILE - COMENTADO
       {showMobileWarning && (
         <div className="tutorial-modal-overlay">
           <div 
@@ -99,6 +103,7 @@ const Home = () => {
           </div>
         </div>
       )}
+      FIM DO MODAL DE AVISO MOBILE */}
 
       <header className="header">
         <div className="title-box">

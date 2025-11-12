@@ -73,11 +73,13 @@ const SculptureGame = ({ loadingArt }) => {
 
   const selectOptions = useMemo(
     () =>
-      allSculptureTitles.map((title) => ({
-        value: title,
-        label: title,
-      })),
-    [allSculptureTitles]
+      allSculptureTitles
+        .filter((title) => !attempts.includes(title)) // Remove tentativas já feitas
+        .map((title) => ({
+          value: title,
+          label: title,
+        })),
+    [allSculptureTitles, attempts]
   );
 
   useEffect(() => {
@@ -145,7 +147,10 @@ const SculptureGame = ({ loadingArt }) => {
   };
 
   const filterOptionByPrefix = (option, inputValue) => {
-    if (inputValue === '') return false;
+    // Se não digitou nada, mostra todas as opções
+    if (inputValue === '') {
+      return true;
+    }
     return option.label.toLowerCase().startsWith(inputValue.toLowerCase());
   };
 
