@@ -10,6 +10,7 @@ import CalendarModal from './CalendarModal.js';
 import VictoryAnimation from './VictoryAnimation'; 
 import VictoryModal from './VictoryModal'; 
 import PostVictoryDisplay from './PostVictoryDisplay'; 
+import { getStatsByDate, recordGameHit } from '../util/Statistics';
 import StreakManager from '../util/StreakManager.js';
 
 const ClassicGame = ({ loadingArt, loadingOptions }) => {
@@ -27,11 +28,10 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [currentDate, setCurrentDate] = useState(todayMidnight());
 
-  // ESTADOS DE VITÓRIA ATUALIZADOS
   const [showVictoryAnimation, setShowVictoryAnimation] = useState(false);
   const [showVictoryModal, setShowVictoryModal] = useState(false);
 
-  const randomPlayers = Math.floor(Math.random() * 1000) + 100;
+  const [todayHits, setTodayHits] = useState(0);
 
   const [activeHint, setActiveHint] = useState(null);
 
@@ -111,7 +111,32 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
     });
     setCurrentDate(date); 
     setShowCalendar(false); 
+    setTodayHits(0);
   }
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!currentDate) return;
+      
+      const dateString = currentDate.toISOString().split('T')[0];
+      try {
+        const statsDoc = await getStatsByDate(dateString);
+        
+        if (statsDoc && statsDoc.classicGame) {
+          setTodayHits(statsDoc.classicGame.hits);
+        } else {
+          console.debug("Nenhum hit registrado para este dia");
+          setTodayHits(0);
+        }
+      } catch (error) {
+        console.error("Falha ao buscar estatísticas:", error);
+        setTodayHits(0);
+      }
+    };
+
+    fetchStats();
+  
+  }, [currentDate]);
 
   const properties = [
     {label: 'Técnica', property: 'tecnica-3'},
@@ -143,7 +168,7 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
     return answer[property] ? answer[property].filter(v => value.includes(v)).length + "/" + answer[property].length : "0/0";
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!classicArt) return; 
     
@@ -158,8 +183,23 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
     setAttempts([{ ...currentValues }, ...attempts]);
     
     if (Object.keys(answer).every(p => checkCorrect(p, currentValues[p]))) {
-      StreakManager.addDate(currentDate, "Clássico");
-      setHasWon(true); // Isso vai disparar o useEffect de vitória
+      setHasWon(true); 
+
+      try {
+        const dateString = currentDate.toISOString().split('T')[0];
+        
+        await recordGameHit({
+          date: dateString,
+          gameMode: 'classicGame', 
+          artname: classicArt.title
+        });
+        
+        setTodayHits(prevHits => prevHits + 1);
+
+      } catch (error) {
+        console.error("Erro ao registrar o hit:", error);
+      }
+
     } else {
       const newHints = [...hintsUnlocked];
       if (attempts.length + 1 >= 3) newHints[0] = true;
@@ -365,7 +405,7 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
 
       {classicArt && (!hasWon && !alreadyWon) && ( // Só mostra isso se ainda não ganhou
         <p className="stats-text" style={{ textAlign: 'center', margin: '1.5rem 0' }}>
-          {randomPlayers} pessoas já acertaram todas as características da obra de hoje!
+          {todayHits} pessoas já acertaram todas as características da obra de hoje!
         </p>
       )}
 
