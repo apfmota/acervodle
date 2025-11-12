@@ -183,7 +183,8 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
     setAttempts([{ ...currentValues }, ...attempts]);
     
     if (Object.keys(answer).every(p => checkCorrect(p, currentValues[p]))) {
-      setHasWon(true); 
+      StreakManager.addDate(currentDate, "Clássico");
+      setHasWon(true);
 
       try {
         const dateString = currentDate.toISOString().split('T')[0];
