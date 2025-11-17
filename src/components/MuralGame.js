@@ -10,7 +10,8 @@ import {
   FaCheck,
   FaMapMarkerAlt,
   FaCalendarAlt, 
-  FaFire
+  FaFire,
+  FaTh
 } from 'react-icons/fa';
 import { GiStoneBust } from 'react-icons/gi';
 import { titleSet, fillTitles } from '../util/ClassicModeDataFetch';
@@ -50,6 +51,8 @@ const MuralGame = ({ loadingArt }) => {
   const [todayHits, setTodayHits] = useState(0);
   const [yesterdayMural, setYesterdayMural] = useState(null);
   const [showTutorial, setShowTutorial] = useState(false);
+
+  const [showArtListModal, setShowArtListModal] = useState(false);
 
   useEffect(() => {
     loadingArt.then((art) => {
@@ -263,9 +266,6 @@ const MuralGame = ({ loadingArt }) => {
         </Link>
       </div>
 
-      <ArtList itemsPromise={getAllMurals()}></ArtList>
-
-      {/* Ícones de estatísticas e tutorial */}
       <div className="utility-icons">
         <div 
           className="utility-icon" 
@@ -288,6 +288,14 @@ const MuralGame = ({ loadingArt }) => {
             <FaFire/>{StreakManager.currentStreak("Mural")}
           </span>
           <span className='tooltip'>Sequência atual</span>
+        </div>
+        <div
+          className="utility-icon"
+          style={{ cursor: 'pointer' }}
+          onClick={() => setShowArtListModal(true)}
+        >
+          <FaTh />
+          <span className="tooltip">Galeria de Murais</span>
         </div>
         <div
           className="utility-icon"
@@ -405,6 +413,13 @@ const MuralGame = ({ loadingArt }) => {
           </div>
         </div>
       )}
+
+      <ArtList
+        isOpen={showArtListModal}
+        onClose={() => setShowArtListModal(false)}
+        itemsPromise={getAllMurals()}
+        title="Galeria de Murais"
+      />
     </div>
   );
 };
