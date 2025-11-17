@@ -1,98 +1,67 @@
 import { useEffect, useState } from 'react';
-import { FaCompass } from 'react-icons/fa';
-import { FaExpandArrowsAlt } from 'react-icons/fa';
-import ReactPaginate from 'react-paginate';
+import { FaTimes } from 'react-icons/fa'; // Ícone para fechar o modal
 
-const ArtList = ({ itemsPromise }) => {
-    
-
-    const PER_PAGE = 5;
-    const [offest, setOffset] = useState(0);
-    const [active, setActive] = useState(false);
+const ArtList = ({ isOpen, onClose, itemsPromise, title }) => {
     const [items, setItems] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        itemsPromise.then(setItems);
-    }, [])
+        // Só carrega as obras se o modal for aberto e as obras ainda não foram carregadas
+        if (isOpen && items.length === 0) {
+            setIsLoading(true);
+            itemsPromise.then(loadedItems => {
+                setItems(loadedItems);
+                setIsLoading(false);
+            });
+        }
+    }, [isOpen, itemsPromise, items.length]);
+
+    if (!isOpen) {
+        return null;
+    }
 
     return (
-        <div>
-            <div style={{ marginBottom: '1rem' }}>
-                <FaCompass
-                    onClick={() => setActive(!active)}
-                    style={{
-                        cursor: 'pointer',
-                        fontSize: '1.5rem',
-                        color: active ? '#007bff' : '#333',
-                        transition: 'color 0.2s'
-                    }}
-                    title={active ? "Mostrar lista de obras" : "Esconder lista de obras"}
-                />
-            </div>
-            {active && (
-                <div>
-                    <ReactPaginate
-                        breakLabel="..."
-                        nextLabel="⏭️"
-                        onPageChange={event =>
-                            setOffset((event.selected * PER_PAGE) % items.length)
-                        }
-                        pageRangeDisplayed={5}
-                        pageCount={Math.ceil(items.length / PER_PAGE)}
-                        previousLabel="⏮️"
-                        renderOnZeroPageCount={null}
-                        pageClassName="page-item"
-                        pageLinkClassName="page-link"
-                        previousClassName="page-item"
-                        previousLinkClassName="page-link"
-                        nextClassName="page-item"
-                        nextLinkClassName="page-link"
-                        breakClassName="page-item"
-                        breakLinkClassName="page-link"
-                        containerClassName="pagination"
-                        activeClassName="active"
-                        style={{ marginBottom: '1rem' }}
-                    />
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                        gap: '1rem'
-                    }}>
+        // O overlay que cobre a tela
+        <div className="art-list-modal-overlay" onClick={onClose}>
+            {/* O conteúdo do modal */}
+            <div className="art-list-modal" onClick={(e) => e.stopPropagation()}>
+                
+                {/* Cabeçalho do Modal */}
+                <div className="art-list-header">
+                    <h2 className="art-list-title">{title}</h2>
+                    <button className="art-list-close" onClick={onClose}>
+                        <FaTimes />
+                    </button>
+                </div>
+                
+                {/* Grid de Obras */}
+                {isLoading ? (
+                    <div className="art-list-loading">Carregando obras...</div>
+                ) : (
+                    // Este é o container que permite o scroll e o layout masonry
+                    <div className="art-list-masonry-container"> 
                         {items
-                            .filter(i => i?.thumbnail_id)
-                            .slice(offest, offest + PER_PAGE)
-                            .map((item, index) => (
+                            .filter(i => i?.thumbnail_id) // Garante que a obra tenha uma miniatura
+                            .map((item) => (
+                                // O "card" da obra
                                 <div
-                                    key={item.id || index}
-                                    style={{
-                                        border: '1px solid #eee',
-                                        borderRadius: '8px',
-                                        padding: '1rem',
-                                        background: '#fafafa',
-                                        textAlign: 'center'
-                                    }}
+                                    key={item.id}
+                                    className="art-list-item"
                                 >
-                                    <span style={{
-                                        display: 'block',
-                                        fontWeight: 'bold',
-                                        marginBottom: '0.5rem'
-                                    }}>
-                                        {item.title}
-                                    </span>
                                     <img
                                         src={item.thumbnail?.full[0]}
                                         alt={item.title}
-                                        style={{
-                                            maxWidth: '100%',
-                                            maxHeight: '150px',
-                                            borderRadius: '4px'
-                                        }}
+                                        className="art-list-item-image"
                                     />
+                                    {/* O overlay com o título */}
+                                    <div className="art-list-item-overlay">
+                                        <h4 className="art-list-item-title">{item.title}</h4>
+                                    </div>
                                 </div>
                             ))}
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }

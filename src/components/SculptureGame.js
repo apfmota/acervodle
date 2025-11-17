@@ -1,6 +1,18 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaPalette, FaPaintRoller, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaCheck, FaMapMarkerAlt, FaCalendarAlt, FaFire } from 'react-icons/fa';
+import { 
+  FaPalette, 
+  FaPaintRoller, 
+  FaPaintBrush, 
+  FaMonument, 
+  FaChartBar, 
+  FaQuestion, 
+  FaCheck, 
+  FaMapMarkerAlt, 
+  FaCalendarAlt, 
+  FaFire,
+  FaTh // ADICIONADO: Ícone da galeria
+} from 'react-icons/fa';
 import { GiStoneBust } from 'react-icons/gi';
 import { fillTitles } from '../util/ClassicModeDataFetch';
 import Select from 'react-select';
@@ -13,7 +25,7 @@ import PostVictoryDisplay from './PostVictoryDisplay';
 import { getStatsByDate, recordGameHit } from '../util/Statistics';
 import StreakManager from '../util/StreakManager.js';
 import { getAllSculptures } from '../taincan/taincanAPI.js';
-import ArtList from './ArtList.js';
+import ArtList from './ArtList.js'; // AGORA É O MODAL
 
 const SculptureGame = ({ loadingArt }) => {
   const [sculptureArt, setSculptureArt] = useState();
@@ -31,6 +43,9 @@ const SculptureGame = ({ loadingArt }) => {
   const [todayHits, setTodayHits] = useState(0);
   const [yesterdaySculpture, setYesterdaySculpture] = useState(null);
   const navigate = useNavigate();
+
+  // ADICIONADO: Estado para controlar o modal da galeria
+  const [showArtListModal, setShowArtListModal] = useState(false);
 
   useEffect(() => {
     loadingArt.then((art) => {
@@ -224,9 +239,9 @@ const SculptureGame = ({ loadingArt }) => {
         </Link>
       </div>
 
-      <ArtList itemsPromise={getAllSculptures()}></ArtList>
+      {/* REMOVIDO: O <ArtList> não fica mais aqui */}
 
-      {/* Ícones utilitários */}
+      {/* Ícones utilitários (AGORA COM A GALERIA) */}
       <div className="utility-icons">
         <div className="utility-icon" style={{ cursor: 'pointer' }}>
           <FaChartBar />
@@ -245,6 +260,15 @@ const SculptureGame = ({ loadingArt }) => {
             <FaFire/>{StreakManager.currentStreak("Escultura")}
           </span>
           <span className='tooltip'>Sequência atual</span>
+        </div>
+        {/* ADICIONADO: Ícone para abrir a galeria */}
+        <div
+          className="utility-icon"
+          style={{ cursor: 'pointer' }}
+          onClick={() => setShowArtListModal(true)}
+        >
+          <FaTh />
+          <span className="tooltip">Galeria de Esculturas</span>
         </div>
         <div
           className="utility-icon"
@@ -377,6 +401,14 @@ const SculptureGame = ({ loadingArt }) => {
           </div>
         </div>
       )}
+
+      {/* ADICIONADO: Renderização do modal da Galeria */}
+      <ArtList
+        isOpen={showArtListModal}
+        onClose={() => setShowArtListModal(false)}
+        itemsPromise={getAllSculptures()}
+        title="Galeria de Esculturas"
+      />
     </div>
   );
 };

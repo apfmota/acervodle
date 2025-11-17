@@ -10,7 +10,8 @@ import {
   FaCheck,
   FaMapMarkerAlt,
   FaCalendarAlt, 
-  FaFire
+  FaFire,
+  FaTh // ADICIONADO: Ícone da galeria
 } from 'react-icons/fa';
 import { GiStoneBust } from 'react-icons/gi';
 import { titleSet, fillTitles } from '../util/ClassicModeDataFetch';
@@ -23,7 +24,7 @@ import VictoryModal from './VictoryModal';
 import PostVictoryDisplay from './PostVictoryDisplay';
 import { getStatsByDate, recordGameHit } from '../util/Statistics';
 import StreakManager from '../util/StreakManager.js';
-import ArtList from './ArtList.js';
+import ArtList from './ArtList.js'; // AGORA É O MODAL
 import { getAllMurals } from '../taincan/taincanAPI.js';
 
 const MuralGame = ({ loadingArt }) => {
@@ -48,6 +49,9 @@ const MuralGame = ({ loadingArt }) => {
 
   const [todayHits, setTodayHits] = useState(0);
   const [showTutorial, setShowTutorial] = useState(false);
+
+  // ADICIONADO: Estado para controlar o modal da galeria
+  const [showArtListModal, setShowArtListModal] = useState(false);
 
   useEffect(() => {
     loadingArt.then((art) => {
@@ -245,9 +249,9 @@ const MuralGame = ({ loadingArt }) => {
         </Link>
       </div>
 
-      <ArtList itemsPromise={getAllMurals()}></ArtList>
+      {/* REMOVIDO: O <ArtList> não fica mais aqui */}
 
-      {/* Ícones de estatísticas e tutorial */}
+      {/* Ícones de estatísticas e tutorial (AGORA COM A GALERIA) */}
       <div className="utility-icons">
         <div className="utility-icon" style={{ cursor: 'pointer' }}>
           <FaChartBar />
@@ -266,6 +270,15 @@ const MuralGame = ({ loadingArt }) => {
             <FaFire/>{StreakManager.currentStreak("Mural")}
           </span>
           <span className='tooltip'>Sequência atual</span>
+        </div>
+        {/* ADICIONADO: Ícone para abrir a galeria */}
+        <div
+          className="utility-icon"
+          style={{ cursor: 'pointer' }}
+          onClick={() => setShowArtListModal(true)}
+        >
+          <FaTh />
+          <span className="tooltip">Galeria de Murais</span>
         </div>
         <div
           className="utility-icon"
@@ -374,6 +387,14 @@ const MuralGame = ({ loadingArt }) => {
           </div>
         </div>
       )}
+
+      {/* ADICIONADO: Renderização do modal da Galeria */}
+      <ArtList
+        isOpen={showArtListModal}
+        onClose={() => setShowArtListModal(false)}
+        itemsPromise={getAllMurals()}
+        title="Galeria de Murais"
+      />
     </div>
   );
 };
