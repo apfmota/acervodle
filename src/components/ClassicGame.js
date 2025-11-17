@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaLightbulb, FaSpinner, FaCalendarAlt, FaFire, FaArrowDown, FaArrowUp } from 'react-icons/fa';
+import { FaPalette, FaPaintRoller, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaLightbulb, FaSpinner, FaCalendarAlt, FaFire, FaArrowDown, FaArrowUp } from 'react-icons/fa';
+import { GiStoneBust } from 'react-icons/gi';
 import Select from 'react-select';
 import { fillPossibleValues, getAllPossibleValues, getArtProperties } from '../util/ClassicModeDataFetch.js';
 import obraExemplo from '../assets/obra_exemplo.jpg';
@@ -290,6 +291,33 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
     }));
   }
 
+  const handleCopyClassic = () => {
+  const dateStr = currentDate.toLocaleDateString('pt-BR');
+  const attemptsNum = attempts.length; // Número de linhas no grid
+  let text = `Acervodle #${dateStr} - Modo Clássico\n`;
+  text += `Acertei a obra em ${attemptsNum} ${attemptsNum === 1 ? 'tentativa' : 'tentativas'}!\n\n`;
+
+  // Gerar o grid de emojis (invertido, para mostrar do primeiro ao último)
+  const emojiGrid = attempts.map(attempt => {
+      return properties.map(field => {
+        const value = attempt[field.property] || '';
+        const correct = checkCorrect(field.property, value);
+        const partially = checkPartiallyCorrect(field.property, value);
+
+        if (correct) return '🟩';
+        if (partially) return '🟧'; // Laranja
+        return '🟥';
+      }).join('');
+    }).reverse().join('\n'); // .reverse() para mostrar a 1ª tentativa no topo
+
+    text += emojiGrid + '\n\n';
+    text += 'https://acervodle.vercel.app/'; // Mude para o seu link!
+
+    navigator.clipboard.writeText(text).catch(err => {
+      console.error('Falha ao copiar:', err);
+    });
+  };
+
   return (
     <div className="game-page">
 
@@ -312,9 +340,10 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
       />
 
       <StatsModal
-          isOpen={showStatsModal}
-          onClose={() => setShowStatsModal(false)}
-          mode="Clássico"
+        isOpen={showStatsModal}
+        onClose={() => setShowStatsModal(false)}
+        mode="Clássico"
+        onCopy={handleCopyClassic}
       />
 
       {/* Logo */}
@@ -328,17 +357,20 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
       <div className="modes-icons">
         <Link to="/classic" className="mode-icon-link">
           <div className="icon-circle active">
+            {/* Ícone Clássico: Paleta (mantido ou trocado por FaImage) */}
             <FaPalette className="mode-icon" />
           </div>
         </Link>
         <Link to="/mural" className="mode-icon-link">
           <div className="icon-circle">
-            <FaPaintBrush className="mode-icon" />
+            {/* Ícone Mural: Rolo de Pintura (NOVO) */}
+            <FaPaintRoller className="mode-icon" />
           </div>
         </Link>
         <Link to="/sculpture" className="mode-icon-link">
           <div className="icon-circle">
-            <FaMonument className="mode-icon" />
+            {/* Ícone Escultura: Busto de Pedra (NOVO) */}
+            <GiStoneBust className="mode-icon" style={{ transform: 'scale(1.2)' }} />
           </div>
         </Link>
       </div>
@@ -486,11 +518,13 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
           gameType="classic"
           artworkTitle={classicArt?.title}
           onShowStats={() => setShowVictoryModal(true)}
+          onCopy={handleCopyClassic}
         />
       )}
 
-      {/* Grid de tentativas */}
-      <div className="attempts-grid" style={{ width: '100%', maxWidth: '1200px', margin: '2.5rem auto 0 auto' }}>
+      {attempts.length > 0 && (
+        <div className="attempts-grid" style={{ width: '100%', maxWidth: '1200px', margin: '2.5rem auto 0 auto' }}>
+          
         <div className="attempts-header" style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(6, 1fr)',
@@ -498,117 +532,124 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
           marginBottom: '0.5rem',
           padding: '0 0.5rem'
         }}>
-          {properties.map((t) => (
-            <div key={t.property} className="col-title" style={{ textAlign: 'center' }}>
-              <div className="col-title-text" style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#000' }}>{t.label}</div>
-              <div className="col-underline" />
+        {properties.map((t) => (
+        <div key={t.property} className="col-title" style={{ textAlign: 'center' }}>
+            <div className="col-title-text" style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#000' }}>{t.label}</div>
+            <div 
+              className="col-underline" />
             </div>
           ))}
         </div>
 
-        {attempts.map((attempt, idx) => (
-          <div key={idx} className="attempt-row" style={{ 
-            display: 'grid',
-            gridTemplateColumns: 'repeat(6, 1fr)',
-            gap: '1.5rem',
-            marginBottom: '0.5rem',
-            padding: '0 0.5rem'
-          }}>
-            {properties.map((field) => {
-              const value = attempt[field.property] || '';
-              const valueAsString = (!value || (Array.isArray(value) && value.length === 0)) ? '-' : value.join(", ");
-                const correct = checkCorrect(field.property, value);
-              const partiallyCorrect = checkPartiallyCorrect(field.property, value);
-              
-              const isDecadeField = field.property === "data-da-obra-2";
-              const showArrow = isDecadeField && answer && answer[field.property] && !correct && value && value.length > 0;
-              const arrowDirection = showArrow && value[0] > answer[field.property][0] ? 'down' : 'up';
-              
-              const hasMultipleValues = answer && answer[field.property] && answer[field.property].length > 1;
-              const showBadge = hasMultipleValues && partiallyCorrect;
-              
-              return (
-                <div key={field.property} className={`attempt-square ${correct ? 'correct' : (partiallyCorrect ? 'partially' : 'wrong')}`}
-                  style={{
-                    padding: '0.75rem',
-                    textAlign: 'center',
-                    borderRadius: '4px',
-                    minHeight: '50px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    wordBreak: 'break-word',
-                    position: 'relative',
-                    flexDirection: showArrow ? 'column' : 'row',
-                    gap: showArrow ? '0.25rem' : '0'
-                  }}
-                  title={`${field.label}: ${valueAsString}`}>
-                  
-                  {showBadge && (
-                    <div className="partial-match-badge" style={{
-                      position: 'absolute',
-                      top: '4px',
-                      right: '4px',
-                      fontWeight: 'bold',
-                      backgroundColor: correct ? '#4caf50' : '#ff8800ff',
-                      padding: '3px 6px',
-                      borderRadius: '3px',
-                      color: correct ? '#fff' : '#000000ff',
-                      fontSize: '0.75rem',
-                      lineHeight: '1',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
-                    }}>{partiallyCorrectTips(field.property, value)}</div>
-                  )}
-                  
-                  <div className="attempt-text-content" style={{
-                    width: showArrow ? '100%' : (showBadge ? '100%' : '70%'),
-                    wordBreak: 'break-word',
-                    overflowY: 'auto',
-                    whiteSpace: 'normal',
-                    maxHeight: showArrow ? '40px' : '50px',
-                    textAlign: 'center',
-                    paddingRight: showBadge ? '35px' : '0'
-                  }}>
-                    {valueAsString}
-                  </div>
-                  
-                  {/* Seta de década estilo LoLdle */}
-                  {showArrow && (
-                    <div className="decade-arrow" style={{
+          {/* As Linhas de Tentativa Anteriores */}
+          {attempts.map((attempt, idx) => (
+            <div key={idx} className="attempt-row" style={{ 
+              display: 'grid',
+              gridTemplateColumns: 'repeat(6, 1fr)',
+              gap: '1.5rem',
+              marginBottom: '0.5rem',
+              padding: '0 0.5rem'
+            }}>
+              {properties.map((field) => {
+                const value = attempt[field.property] || '';
+                const valueAsString = (!value || (Array.isArray(value) && value.length === 0)) ? '-' : value.join(", ");
+                  const correct = checkCorrect(field.property, value);
+                const partiallyCorrect = checkPartiallyCorrect(field.property, value);
+                
+                // Verifica se precisa mostrar seta de década
+                const isDecadeField = field.property === "data-da-obra-2";
+                const showArrow = isDecadeField && answer && answer[field.property] && !correct && value && value.length > 0;
+                const arrowDirection = showArrow && value[0] > answer[field.property][0] ? 'down' : 'up';
+                
+                // Verifica se tem múltiplos valores corretos (mostra badge mesmo quando acerta)
+                const hasMultipleValues = answer && answer[field.property] && answer[field.property].length > 1;
+                const showBadge = hasMultipleValues && partiallyCorrect;
+                
+                return (
+                  <div key={field.property} className={`attempt-square ${correct ? 'correct' : (partiallyCorrect ? 'partially' : 'wrong')}`}
+                    style={{
+                      padding: '0.75rem',
+                      textAlign: 'center',
+                      borderRadius: '4px',
+                      minHeight: '50px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      width: '26px',
-                      height: '26px',
-                      borderRadius: '4px',
-                      background: '#005285',
-                      transform: 'rotate(45deg)',
-                      boxShadow: '0 3px 8px rgba(0, 82, 133, 0.4)',
-                      marginTop: '0.4rem'
+                      wordBreak: 'break-word',
+                      position: 'relative',
+                      flexDirection: showArrow ? 'column' : 'row',
+                      gap: showArrow ? '0.25rem' : '0'
+                    }}
+                    title={`${field.label}: ${valueAsString}`}>
+                    
+                    {/* Badge de acerto parcial - posicionado no topo direito */}
+                    {showBadge && (
+                      <div className="partial-match-badge" style={{
+                        position: 'absolute',
+                        top: '4px',
+                        right: '4px',
+                        fontWeight: 'bold',
+                        backgroundColor: correct ? '#4caf50' : '#ff8800ff',
+                        padding: '3px 6px',
+                        borderRadius: '3px',
+                        color: correct ? '#fff' : '#000000ff',
+                        fontSize: '0.75rem',
+                        lineHeight: '1',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                      }}>{partiallyCorrectTips(field.property, value)}</div>
+                    )}
+                    
+                    <div className="attempt-text-content" style={{
+                      width: showArrow ? '100%' : (showBadge ? '100%' : '70%'),
+                      wordBreak: 'break-word',
+                      overflowY: 'auto',
+                      whiteSpace: 'normal',
+                      maxHeight: showArrow ? '40px' : '50px',
+                      textAlign: 'center',
+                      paddingRight: showBadge ? '35px' : '0'
                     }}>
-                      {arrowDirection === 'down' ? (
-                        <FaArrowDown style={{ 
-                          color: '#fff', 
-                          fontSize: '11px', 
-                          transform: 'rotate(-45deg)',
-                          fontWeight: 'bold'
-                        }} />
-                      ) : (
-                        <FaArrowUp style={{ 
-                          color: '#fff', 
-                          fontSize: '11px', 
-                          transform: 'rotate(-45deg)',
-                          fontWeight: 'bold'
-                        }} />
-                      )}
+                      {valueAsString}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
+                    
+                    {/* Seta de década estilo LoLdle */}
+                    {showArrow && (
+                      <div className="decade-arrow" style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '26px',
+                        height: '26px',
+                        borderRadius: '4px',
+                        background: '#005285',
+                        transform: 'rotate(45deg)',
+                        boxShadow: '0 3px 8px rgba(0, 82, 133, 0.4)',
+                        marginTop: '0.4rem'
+                      }}>
+                        {arrowDirection === 'down' ? (
+                          <FaArrowDown style={{ 
+                            color: '#fff', 
+                            fontSize: '11px', 
+                            transform: 'rotate(-45deg)',
+                            fontWeight: 'bold'
+                          }} />
+                        ) : (
+                          <FaArrowUp style={{ 
+                            color: '#fff', 
+                            fontSize: '11px', 
+                            transform: 'rotate(-45deg)',
+                            fontWeight: 'bold'
+                          }} />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+          
+        </div>
+      )}
 
       <p className="yesterday-text">
         A obra de ontem foi: {yesterdayClassicArt}

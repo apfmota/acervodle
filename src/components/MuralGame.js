@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   FaPalette,
   FaPaintBrush,
+  FaPaintRoller,
   FaMonument,
   FaChartBar,
   FaQuestion,
@@ -11,7 +12,7 @@ import {
   FaCalendarAlt, 
   FaFire
 } from 'react-icons/fa';
-
+import { GiStoneBust } from 'react-icons/gi';
 import { titleSet, fillTitles } from '../util/ClassicModeDataFetch';
 import Select from 'react-select';
 import { getMuralArtByDate } from '../util/DailyArt';
@@ -23,6 +24,8 @@ import PostVictoryDisplay from './PostVictoryDisplay';
 import { getStatsByDate, recordGameHit } from '../util/Statistics';
 import StreakManager from '../util/StreakManager.js';
 import StatsModal from './StatsModal';
+import ArtList from './ArtList.js';
+import { getAllMurals } from '../taincan/taincanAPI.js';
 
 const MuralGame = ({ loadingArt }) => {
   const [muralArt, setMuralArt] = useState();
@@ -188,8 +191,27 @@ const MuralGame = ({ loadingArt }) => {
 
   const handleGuessLocation = () => {
     if (muralArt) {
-      navigate('/map', { state: { artObject: muralArt, artType: 'mural', dateOfArt: currentDate} });
+      navigate('/map', { state: { artObject: muralArt, artType: 'mural', dateOfArt: currentDate, previousAttempts: attempts.length + 1 } });
     }
+  };
+
+  const handleCopyMural = () => {
+    const dateStr = currentDate.toLocaleDateString('pt-BR');
+    const attemptsNum = attempts.length + 1;
+
+    let text = `Acervodle #${dateStr} - Modo Mural\n`;
+    text += `Descobri o mural em ${attemptsNum} ${attemptsNum === 1 ? 'tentativa' : 'tentativas'}!\n\n`;
+
+    let zoomEmojis = '';
+    for (let i = 0; i < attemptsNum; i++) {
+      zoomEmojis += '🖼️';
+    }
+    text += zoomEmojis + '\n\n';
+    text += 'https://acervodle.vercel.app/';
+
+    navigator.clipboard.writeText(text).catch(err => {
+      console.error('Falha ao copiar:', err);
+    });
   };
 
   return (
@@ -212,6 +234,7 @@ const MuralGame = ({ loadingArt }) => {
           setShowVictoryModal(false);
           setShowStatsModal(true);
         }}
+        onCopy={handleCopyMural}
       />
 
       {/* Logo */}
@@ -230,15 +253,17 @@ const MuralGame = ({ loadingArt }) => {
         </Link>
         <Link to="/mural" className="mode-icon-link">
           <div className="icon-circle active">
-            <FaPaintBrush className="mode-icon" />
+            <FaPaintRoller className="mode-icon" />
           </div>
         </Link>
         <Link to="/sculpture" className="mode-icon-link">
           <div className="icon-circle">
-            <FaMonument className="mode-icon" />
+            <GiStoneBust className="mode-icon" style={{ transform: 'scale(1.2)' }} />
           </div>
         </Link>
       </div>
+
+      <ArtList itemsPromise={getAllMurals()}></ArtList>
 
       {/* Ícones de estatísticas e tutorial */}
       <div className="utility-icons">
@@ -317,6 +342,7 @@ const MuralGame = ({ loadingArt }) => {
           artworkTitle={muralArt?.title}
           onGuessLocation={handleGuessLocation}
           onShowStats={() => setShowVictoryModal(true)}
+          onCopy={handleCopyMural}
         />
       )}
 

@@ -76,36 +76,41 @@ export const countSculptures = async (limitDate) => {
     return await countElements(limitDate, SCULPTURES_METAQUERY + "&" + NO_TITLE_FILTER_METAQUERY);
 }
 
-const elementsCache = {};
+const promisesCache = {};
 export const getElements = async (metaqueryParams = "") => {
-    if (elementsCache[metaqueryParams]) {
-        return elementsCache[metaqueryParams];
-    }
-    let elements = [];
-    let page = 1;
-    let lastPage = false;
-    const PAGES_BATCH_SIZE = 10;
-    const PER_PAGE = 50;
-    do {
-        lastPage = false;
-        const promises = [];
-        for (let i = 0; i < PAGES_BATCH_SIZE; i++) {
-            const fetchPage = async (currentPage) => {
-                const request = await fetch(COLLECTION_URL + `/items?perpage=${PER_PAGE}&paged=${currentPage}&${metaqueryParams}&${await getFetchParameters()}`);
-                const json = await request.json();
-                if (json.items.length > 0) {
-                    json.items.forEach(element => elements.push(element));
-                } else {
-                    lastPage = true;
+    if (promisesCache[metaqueryParams]) {
+        return await promisesCache[metaqueryParams];
+    } else {
+        const newRun = async () => {
+            let elements = [];
+            let page = 1;
+            let lastPage = false;
+            const PAGES_BATCH_SIZE = 10;
+            const PER_PAGE = 50;
+            do {
+                lastPage = false;
+                const promises = [];
+                for (let i = 0; i < PAGES_BATCH_SIZE; i++) {
+                    const fetchPage = async (currentPage) => {
+                        const request = await fetch(COLLECTION_URL + `/items?perpage=${PER_PAGE}&paged=${currentPage}&${metaqueryParams}&${await getFetchParameters()}`);
+                        const json = await request.json();
+                        if (json.items.length > 0) {
+                            json.items.forEach(element => elements.push(element));
+                        } else {
+                            lastPage = true;
+                        }
+                    }
+                    promises.push(fetchPage(page));
+                    page++;
                 }
-            }
-            promises.push(fetchPage(page));
-            page++;
+                await Promise.all(promises);
+            } while (!lastPage);
+            return elements;
         }
-        await Promise.all(promises);
-    } while (!lastPage);
-    elementsCache[metaqueryParams] = elements;
-    return elements;
+        const currentPromise = newRun();
+        promisesCache[metaqueryParams] = currentPromise;
+        return await currentPromise;
+    }
 }
 
 export const getAllArts = async () => {

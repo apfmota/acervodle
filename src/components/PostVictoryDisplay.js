@@ -1,15 +1,25 @@
-import React from 'react';
-import { FaMapMarkerAlt, FaTrophy } from 'react-icons/fa';
+import React, { useState } from 'react'; // 1. Importar useState
+import { FaMapMarkerAlt, FaTrophy, FaShareAlt } from 'react-icons/fa'; // 2. Importar FaShareAlt
 
 const PostVictoryDisplay = ({ 
   gameType, 
   artworkTitle, 
   onGuessLocation, 
   onShowStats, 
-  isLocationGame = false
+  isLocationGame = false,
+  onCopy
 }) => {
   
+  const [copied, setCopied] = useState(false); // 4. Adicionar estado de "copiado"
   const isBonusGame = gameType === 'mural' || gameType === 'sculpture';
+
+  const handleCopyClick = () => {
+    if (onCopy) {
+      onCopy();
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   let titleContent;
   if (isLocationGame) {
@@ -41,6 +51,16 @@ const PostVictoryDisplay = ({
         <button className="post-victory-btn stats" onClick={onShowStats}>
           <FaTrophy /> Parabéns
         </button>
+
+        {onCopy && (
+          <button 
+            className={`post-victory-btn stats ${copied ? 'copied' : ''}`}
+            onClick={handleCopyClick}
+            style={copied ? { backgroundColor: '#4CAF50', color: 'white' } : {}}
+          >
+            <FaShareAlt /> {copied ? 'Resultado Copiado!' : 'Compartilhar!'}
+          </button>
+        )}
 
         {isBonusGame && !isLocationGame && (
           <button className="post-victory-btn location" onClick={onGuessLocation}>

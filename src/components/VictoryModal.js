@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaMapMarkerAlt } from 'react-icons/fa';
+import { 
+  FaPalette, 
+  FaPaintRoller,
+  FaChartBar, 
+  FaMapMarkerAlt, 
+  FaShareAlt
+} from 'react-icons/fa';
+import { GiStoneBust } from 'react-icons/gi';
 
 const VictoryModal = ({ 
   isOpen, 
@@ -13,9 +20,11 @@ const VictoryModal = ({
   alreadyWon,
   onGuessLocation,
   isLocationVictory = false,
-  onShowStats
+  onShowStats,
+  onCopy
 }) => {
   const [timeRemaining, setTimeRemaining] = useState('');
+  const [copied, setCopied] = useState(false);
 
   // Lógica para o temporizador de contagem regressiva
   const calculateTimeRemaining = () => {
@@ -56,6 +65,15 @@ const VictoryModal = ({
     onClose();
   };
 
+  // 3. Função para lidar com o clique de copiar
+  const handleCopyClick = () => {
+    if (onCopy) {
+      onCopy();
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
 
   return (
     <div className="victory-modal-overlay" onClick={onClose}>
@@ -85,10 +103,24 @@ const VictoryModal = ({
         )}
         
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-          <button className="victory-stats-button" onClick={onShowStats}>,
+          
+          {/* Botão Estatísticas */}
+          <button className="victory-stats-button" onClick={onShowStats}>
             <FaChartBar /> Estatísticas
           </button>
 
+          {/* Botão Compartilhar */}
+          {onCopy && (
+            <button 
+              className="victory-stats-button"
+              onClick={handleCopyClick}
+              style={copied ? { backgroundColor: '#4CAF50', color: 'white' } : {}}
+            >
+              <FaShareAlt /> {copied ? 'Copiado!' : 'Compartilhar'}
+            </button>
+          )}
+
+          {/* Botão Adivinhar Localização*/}
           {(gameType === 'mural' || gameType === 'sculpture') && !isLocationVictory && !alreadyWon && (
             <button 
               className="victory-stats-button" 
@@ -106,7 +138,7 @@ const VictoryModal = ({
           <div className="victory-timer">{timeRemaining}</div>
         </div>
 
-        {/* Ícones dos modos de jogo */}
+        {/* 5. ÍCONES DE NAVEGAÇÃO CORRIGIDOS */}
         <div className="victory-modal-modes">
           <Link to="/classic" className="mode-icon-link" onClick={onClose}>
             <div className={`icon-circle ${gameType === 'classic' ? 'active' : ''}`}>
@@ -115,12 +147,12 @@ const VictoryModal = ({
           </Link>
           <Link to="/mural" className="mode-icon-link" onClick={onClose}>
             <div className={`icon-circle ${gameType === 'mural' ? 'active' : ''}`}>
-              <FaPaintBrush className="mode-icon" />
+              <FaPaintRoller className="mode-icon" />
             </div>
           </Link>
           <Link to="/sculpture" className="mode-icon-link" onClick={onClose}>
             <div className={`icon-circle ${gameType === 'sculpture' ? 'active' : ''}`}>
-              <FaMonument className="mode-icon" />
+              <GiStoneBust className="mode-icon" style={{ transform: 'scale(1.2)' }} />
             </div>
           </Link>
         </div>
