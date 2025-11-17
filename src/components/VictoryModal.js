@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-// ADICIONADO FaMapMarkerAlt
 import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaMapMarkerAlt } from 'react-icons/fa';
 
 const VictoryModal = ({ 
@@ -9,15 +8,14 @@ const VictoryModal = ({
   artworkTitle, 
   artworkImage, 
   attemptsCount, 
+  todayHits,
   gameType,
   alreadyWon,
-  onGuessLocation, // 1. ADICIONADA NOVA PROP
-  isLocationVictory = false // 1. ADICIONE A NOVA PROP COM VALOR PADRÃO
+  onGuessLocation,
+  isLocationVictory = false,
+  onShowStats
 }) => {
   const [timeRemaining, setTimeRemaining] = useState('');
-
-  // Gera um número aleatório estável para a estatística
-  const randomPlayerNumber = useMemo(() => Math.floor(Math.random() * 200) + 50, [artworkTitle]);
 
   // Lógica para o temporizador de contagem regressiva
   const calculateTimeRemaining = () => {
@@ -38,25 +36,19 @@ const VictoryModal = ({
   useEffect(() => {
     if (!isOpen) return;
 
-    // Define o valor inicial imediatamente
     setTimeRemaining(calculateTimeRemaining());
 
-    // Atualiza a cada segundo
     const timerId = setInterval(() => {
       setTimeRemaining(calculateTimeRemaining());
     }, 1000);
 
-    // Limpa o intervalo quando o componente é desmontado ou fechado
     return () => clearInterval(timerId);
   }, [isOpen]);
 
-  // Retorna nulo se não estiver aberto
   if (!isOpen) return null;
 
-  // Determina o nome do tipo de jogo para o texto
   const gameName = gameType === 'classic' ? 'obra' : (gameType === 'mural' ? 'mural' : 'escultura');
 
-  // 2. FUNÇÃO PARA LIDAR COM O CLIQUE (FECHA O MODAL E NAVEGA)
   const handleLocationClick = () => {
     if (onGuessLocation) {
       onGuessLocation();
@@ -72,7 +64,6 @@ const VictoryModal = ({
           X
         </button>
 
-        {/* 2. TÍTULO E SUBTÍTULO CONDICIONAIS */}
         <h2 className="victory-modal-title">
           {isLocationVictory ? 'Localização Correta!' : (alreadyWon ? 'Você já acertou essa obra' : 'Você acertou!')}
         </h2>
@@ -85,7 +76,7 @@ const VictoryModal = ({
         {!alreadyWon && (
           <div className="victory-modal-stats-container">
             <p className="victory-modal-stats">
-              Você é a <strong>{randomPlayerNumber}º</strong> pessoa a acertar hoje!
+              Você é a <strong>{todayHits}º</strong> pessoa a acertar hoje!
             </p>
             <p className="victory-modal-stats">
               Número de tentativas: <strong>{attemptsCount}</strong>
@@ -93,18 +84,16 @@ const VictoryModal = ({
           </div>
         )}
         
-        {/* 3. BOTÕES RENDERIZADOS EM UM CONTAINER FLEX */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-          <button className="victory-stats-button">
+          <button className="victory-stats-button" onClick={onShowStats}>,
             <FaChartBar /> Estatísticas
           </button>
 
-          {/* 4. RENDERIZAÇÃO CONDICIONAL DO BOTÃO DE LOCALIZAÇÃO */}
           {(gameType === 'mural' || gameType === 'sculpture') && !isLocationVictory && !alreadyWon && (
             <button 
               className="victory-stats-button" 
               onClick={handleLocationClick} 
-              style={{ backgroundColor: '#EE7D00' }} // Cor laranja para diferenciar
+              style={{ backgroundColor: '#EE7D00' }}
             >
               <FaMapMarkerAlt /> Adivinhar Localização
             </button>

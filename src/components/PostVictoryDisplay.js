@@ -6,12 +6,11 @@ const PostVictoryDisplay = ({
   artworkTitle, 
   onGuessLocation, 
   onShowStats, 
-  isLocationGame = false // 1. ADICIONADA NOVA PROP
+  isLocationGame = false
 }) => {
   
   const isBonusGame = gameType === 'mural' || gameType === 'sculpture';
 
-  // 2. LÓGICA DE TÍTULO ATUALIZADA
   let titleContent;
   if (isLocationGame) {
     titleContent = (
@@ -43,7 +42,6 @@ const PostVictoryDisplay = ({
           <FaTrophy /> Parabéns
         </button>
 
-        {/* 3. LÓGICA DO BOTÃO ATUALIZADA (só aparece se for bônus E NÃO for o jogo de localização) */}
         {isBonusGame && !isLocationGame && (
           <button className="post-victory-btn location" onClick={onGuessLocation}>
             <FaMapMarkerAlt /> Adivinhar Localização

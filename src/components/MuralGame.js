@@ -11,6 +11,7 @@ import {
   FaCalendarAlt, 
   FaFire
 } from 'react-icons/fa';
+
 import { titleSet, fillTitles } from '../util/ClassicModeDataFetch';
 import Select from 'react-select';
 import { getMuralArtByDate } from '../util/DailyArt';
@@ -21,6 +22,7 @@ import VictoryModal from './VictoryModal';
 import PostVictoryDisplay from './PostVictoryDisplay';
 import { getStatsByDate, recordGameHit } from '../util/Statistics';
 import StreakManager from '../util/StreakManager.js';
+import StatsModal from './StatsModal';
 
 const MuralGame = ({ loadingArt }) => {
   const [muralArt, setMuralArt] = useState();
@@ -36,13 +38,14 @@ const MuralGame = ({ loadingArt }) => {
   const [alreadyWon, setAlreadyWon] = useState(false);
 
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showStatsModal, setShowStatsModal] = useState(false); 
   const [currentDate, setCurrentDate] = useState(todayMidnight());
 
-  // Estados de vitória
   const [showVictoryAnimation, setShowVictoryAnimation] = useState(false);
   const [showVictoryModal, setShowVictoryModal] = useState(false);
 
   const [todayHits, setTodayHits] = useState(0);
+  const [yesterdayMural, setYesterdayMural] = useState(null);
   const [showTutorial, setShowTutorial] = useState(false);
 
   useEffect(() => {
@@ -103,20 +106,20 @@ const MuralGame = ({ loadingArt }) => {
 
       if (isCorrect) {
 
-        StreakManager.addDate(currentDate, "Mural");
-        setHasWon(true); // Isso vai disparar o useEffect de vitória
+        StreakManager.addWin(currentDate, "Mural", attempts.length + 1);
+        setHasWon(true);
         setZoom(100);
 
         try {
           const dateString = currentDate.toISOString().split('T')[0];
+          
+          setTodayHits((prevHits) => prevHits + 1);
 
           await recordGameHit({
             date: dateString,
             gameMode: 'muralGame',
             artname: muralArt.title,
           });
-
-          setTodayHits((prevHits) => prevHits + 1);
         } catch (error) {
           console.error('Erro ao registrar o hit:', error);
         }
@@ -148,13 +151,27 @@ const MuralGame = ({ loadingArt }) => {
       }
     };
 
+    const fetchYesterdayArt = () => {
+      const yesterday = new Date(currentDate.getTime());
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      getMuralArtByDate(yesterday)
+        .then((art) => {
+          if (art) setYesterdayMural(art.title);
+        })
+        .catch((err) =>
+          console.error('Erro ao buscar arte de ontem:', err)
+        );
+    };
+
     fetchStats();
+    fetchYesterdayArt();
   }, [currentDate]);
 
   const selectOptions = useMemo(
     () =>
       allMuralTitles
-        .filter((title) => !attempts.includes(title)) // Remove tentativas já feitas
+        .filter((title) => !attempts.includes(title))
         .map((title) => ({
           value: title,
           label: title,
@@ -163,7 +180,6 @@ const MuralGame = ({ loadingArt }) => {
   );
 
   const filterOptionByPrefix = (option, inputValue) => {
-    // Se não digitou nada, mostra todas as opções
     if (inputValue === '') {
       return true;
     }
@@ -172,13 +188,12 @@ const MuralGame = ({ loadingArt }) => {
 
   const handleGuessLocation = () => {
     if (muralArt) {
-      navigate('/map', { state: { artObject: muralArt, artType: 'mural' } });
+      navigate('/map', { state: { artObject: muralArt, artType: 'mural', dateOfArt: currentDate} });
     }
   };
 
   return (
     <div className="game-page">
-      {/* Componentes de vitória */}
       {showVictoryAnimation && (
         <VictoryAnimation onComplete={() => setShowVictoryAnimation(false)} />
       )}
@@ -189,9 +204,14 @@ const MuralGame = ({ loadingArt }) => {
         artworkTitle={muralArt?.title}
         artworkImage={muralArt?.thumbnail?.full[0]}
         attemptsCount={attempts.length + 1}
+        todayHits={todayHits}
         gameType="mural"
         onGuessLocation={handleGuessLocation}
         alreadyWon={alreadyWon}
+        onShowStats={() => {
+          setShowVictoryModal(false);
+          setShowStatsModal(true);
+        }}
       />
 
       {/* Logo */}
@@ -222,7 +242,11 @@ const MuralGame = ({ loadingArt }) => {
 
       {/* Ícones de estatísticas e tutorial */}
       <div className="utility-icons">
-        <div className="utility-icon" style={{ cursor: 'pointer' }}>
+        <div 
+          className="utility-icon" 
+          style={{ cursor: 'pointer' }}
+          onClick={() => setShowStatsModal(true)}
+        > 
           <FaChartBar />
           <span className="tooltip">Estatísticas</span>
         </div>
@@ -269,7 +293,6 @@ const MuralGame = ({ loadingArt }) => {
       {/* Estatísticas */}
       <p className="stats-text">{todayHits} pessoas já acertaram este mural!</p>
 
-      {/* LÓGICA DE EXIBIÇÃO ATUALIZADA */}
       {(!hasWon && !alreadyWon) ? (
         <form onSubmit={handleSubmit} className="guess-form">
           <Select
@@ -317,12 +340,22 @@ const MuralGame = ({ loadingArt }) => {
         ))}
       </div>
 
+      <p className="yesterday-text">
+        O mural de ontem foi: {yesterdayMural}
+      </p>
+
       <CalendarModal
         isOpen={showCalendar}
         onClose={() => setShowCalendar(false)}
         onDateSelect={changeDate}
         currentDate={currentDate}
         mode="Mural"
+      />
+
+      <StatsModal
+          isOpen={showStatsModal}
+          onClose={() => setShowStatsModal(false)}
+          mode="Mural"
       />
 
       {/* Modal de Tutorial */}

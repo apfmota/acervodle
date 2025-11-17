@@ -7,7 +7,10 @@ import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion } from 'rea
 
 import VictoryAnimation from './VictoryAnimation';
 import VictoryModal from './VictoryModal';
-import PostVictoryDisplay from './PostVictoryDisplay'; // Importado
+import PostVictoryDisplay from './PostVictoryDisplay';
+import { getStatsByDate, recordGameHit } from '../util/Statistics';
+import StatsModal from './StatsModal';
+import StreakManager from '../util/StreakManager.js';
 
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -20,11 +23,21 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
+const redIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+const defaultIcon = new L.Icon.Default();
+
 const GuessLocationPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { artObject, artType } = location.state || {};
-  
+  const { artObject, artType, dateOfArt } = location.state || {};  
   const [artClusters, setArtClusters] = useState([]);
   const [allArt, setAllArt] = useState([]);
   const [mapCenter, setMapCenter] = useState([-29.715188239233512, -53.71606336080405]);
@@ -33,9 +46,20 @@ const GuessLocationPage = () => {
   const [isCorrectGuess, setIsCorrectGuess] = useState(false);
   const [mapBounds, setMapBounds] = useState(null);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showStatsModal, setShowStatsModal] = useState(false); 
 
   const [showVictoryAnimation, setShowVictoryAnimation] = useState(false);
   const [showVictoryModal, setShowVictoryModal] = useState(false);
+  
+  const [todayLocationHits, setTodayLocationHits] = useState(0);
+  const locationGameMode =  artType === 'sculpture' ? 'locationSculpture' : 'locationMural';
+  const gameMode =  artType === 'sculpture' ? 'Adivinhar Localização Escultura' : 'Adivinhar Localização Mural';
+  
+  const dateString = dateOfArt
+    ? new Date(dateOfArt).toISOString().split('T')[0]
+    : null;
+
+  const [victoryAttemptCount, setVictoryAttemptCount] = useState(0);
 
   const artTypeName = artType === 'sculpture' ? 'localizada esta escultura' : 'localizado este mural';
   const pageTitle = `Onde está ${artTypeName}?`;
@@ -99,7 +123,7 @@ const GuessLocationPage = () => {
 
         setArtClusters(clusters);
 
-        const boundsPadding = 0.05;
+        const boundsPadding = 1.0;
         const lat = mapCenter[0];
         const lng = mapCenter[1];
 
@@ -120,15 +144,61 @@ const GuessLocationPage = () => {
     }
   }, [artType, navigate]);
 
-  const handleGuess = (artItemsInCluster) => {
+
+  useEffect(() => {
+    if (!dateString) {
+      console.warn('dateOfArt não foi fornecida, estatísticas não serão carregadas.');
+      return;
+    }
+
+    const fetchStats = async () => {
+      try {
+        const statsDoc = await getStatsByDate(dateString);
+        if (statsDoc && statsDoc[locationGameMode]) {
+          setTodayLocationHits(statsDoc[locationGameMode].hits);
+        } else {
+          setTodayLocationHits(0);
+        }
+      } catch (error) {
+        console.error('Falha ao buscar estatísticas de localização:', error);
+        setTodayLocationHits(0);
+      }
+    };
+
+    fetchStats();
+  }, [dateString, locationGameMode]);
+
+  const handleGuess = async (artItemsInCluster) => {
     if (isCorrectGuess || showVictoryModal) return;
 
     const idsInCluster = artItemsInCluster.map(item => item.metadata['numero-de-registro'].value);
 
     if (idsInCluster.includes(correctId)) {
+
+      const attemptCount = wrongGuesses.size + 1;
       setIsCorrectGuess(true);
       setShowVictoryAnimation(true);
       setShowVictoryModal(true);
+      setVictoryAttemptCount(attemptCount);
+      setWrongGuesses(new Set());
+      setTodayLocationHits((prev) => prev + 1);
+
+      if (dateOfArt) {
+        StreakManager.addWin(dateOfArt, gameMode, attemptCount);
+      }
+
+      if (dateString && artObject) {
+        try {
+          await recordGameHit({
+            date: dateString,
+            gameMode: locationGameMode,
+            artname: artObject.title,
+          });
+        } catch (error) {
+          console.error('Erro ao registrar acerto de localização:', error);
+        }
+      }
+
     } else {
       setWrongGuesses(prev => new Set([...prev, ...idsInCluster]));
     }
@@ -150,19 +220,28 @@ const GuessLocationPage = () => {
         onClose={() => setShowVictoryModal(false)}
         artworkTitle={artObject?.title}
         artworkImage={artObject?.thumbnail?.full[0]}
-        attemptsCount={wrongGuesses.size + 1}
+        attemptsCount={victoryAttemptCount}
+        todayHits={todayLocationHits} 
         gameType={artType}
         isLocationVictory={true}
+        onShowStats={() => {
+          setShowVictoryModal(false);
+          setShowStatsModal(true);
+        }}
       />
 
-      {/* Logo com link para home - IGUAL aos outros jogos */}
+      <StatsModal
+        isOpen={showStatsModal}
+        onClose={() => setShowStatsModal(false)}
+        mode={gameMode}
+      />
+
       <Link to="/" className="logo-link">
         <div className="title-box" style={{ transform: 'scale(0.8)', cursor: 'pointer' }}>
           <h1>Acervodle</h1>
         </div>
       </Link>
 
-      {/* Ícones dos modos de jogo - IGUAL aos outros jogos */}
       <div className="modes-icons">
         <Link to="/classic" className="mode-icon-link">
           <div className="icon-circle">
@@ -181,9 +260,12 @@ const GuessLocationPage = () => {
         </Link>
       </div>
 
-      {/* Ícones de estatísticas e tutorial - IGUAL aos outros jogos */}
       <div className="utility-icons">
-        <div className="utility-icon" style={{ cursor: 'pointer' }}>
+        <div 
+          className="utility-icon" 
+          style={{ cursor: 'pointer' }}
+          onClick={() => setShowStatsModal(true)}
+        >
           <FaChartBar />
           <span className="tooltip">Estatísticas</span>
         </div>
@@ -197,7 +279,6 @@ const GuessLocationPage = () => {
         </div>
       </div>
 
-      {/* Container principal do jogo de localização */}
       <div className="mural-container" style={{ maxWidth: '800px', margin: '2rem auto' }}>
         <h3 className="mural-question">{pageTitle}</h3>
 
@@ -239,11 +320,20 @@ const GuessLocationPage = () => {
               wrongGuesses.has(item.metadata['numero-de-registro'].value)
             ))
             .map((cluster) => {
+
               const clusterKey = `${cluster.center.lat}-${cluster.center.lng}`;
+
+              const isThisClusterCorrect = cluster.items.some(
+                item => item.metadata['numero-de-registro'].value === correctId
+              );
+
               return (
                 <Marker
                   key={clusterKey}
                   position={[cluster.center.lat, cluster.center.lng]}
+                  
+                  icon={(isCorrectGuess && isThisClusterCorrect) ? redIcon : defaultIcon} 
+                  
                   eventHandlers={{
                     click: (isCorrectGuess || showVictoryModal) ? null : () => handleGuess(cluster.items),
                   }}
@@ -259,24 +349,22 @@ const GuessLocationPage = () => {
                         ))}
                       </ul>
                     </div>
-                  </Popup> {/* <-- CORREÇÃO: TAG DE FECHAMENTO CORRETA */}
+                  </Popup>
                 </Marker>
               );
             })}
         </MapContainer>
 
-        {/* RENDERIZAÇÃO DO PAINEL DE PÓS-VITÓRIA */}
         {isCorrectGuess && (
           <PostVictoryDisplay
             gameType={artType}
             artworkTitle={artObject?.title}
-            onShowStats={() => setShowVictoryModal(true)}
             isLocationGame={true}
+            onShowStats={() => setShowVictoryModal(true)}
           />
         )}
       </div>
 
-      {/* Modal de Tutorial - similar aos outros jogos */}
       {showTutorial && (
         <div className="tutorial-modal-overlay" onClick={() => setShowTutorial(false)}>
           <div className="tutorial-modal" onClick={(e) => e.stopPropagation()}>

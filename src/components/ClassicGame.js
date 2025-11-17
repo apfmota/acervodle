@@ -12,6 +12,7 @@ import VictoryModal from './VictoryModal';
 import PostVictoryDisplay from './PostVictoryDisplay'; 
 import { getStatsByDate, recordGameHit } from '../util/Statistics';
 import StreakManager from '../util/StreakManager.js';
+import StatsModal from './StatsModal';
 
 const ClassicGame = ({ loadingArt, loadingOptions }) => {
   const [classicArt, setClassicArt] = useState();
@@ -26,13 +27,14 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
   const [alreadyWon, setAlreadyWon] = useState(false);
   
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showStatsModal, setShowStatsModal] = useState(false); 
   const [currentDate, setCurrentDate] = useState(todayMidnight());
 
   const [showVictoryAnimation, setShowVictoryAnimation] = useState(false);
   const [showVictoryModal, setShowVictoryModal] = useState(false);
 
   const [todayHits, setTodayHits] = useState(0);
-
+  const [yesterdayClassicArt, setYesterdayClassicArt] = useState(null);
   const [activeHint, setActiveHint] = useState(null);
 
   useEffect(() => {
@@ -64,7 +66,6 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
     }); 
   }, [loadingArt]) 
 
-  // USEEFFECT DE VITÓRIA ATUALIZADO
   useEffect(() => {
     if (hasWon) {
       setShowVictoryAnimation(true);
@@ -94,7 +95,6 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
         setAlreadyWon(dateAlreadyWon);
         setShowVictoryModal(dateAlreadyWon);
         setHasWon(false);
-        // RESET ATUALIZADO
         setShowVictoryAnimation(false); 
       } else {
         setClassicArt(null);
@@ -104,7 +104,6 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
         setAttempts([]);
         setHintsUnlocked([false, false, false]);
         setHasWon(false);
-        // RESET ATUALIZADO
         setShowVictoryAnimation(false);
         setShowVictoryModal(false);
       }
@@ -134,8 +133,27 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
       }
     };
 
+    const fetchYesterdayArt = () => {
+      const yesterday = new Date(currentDate.getTime());
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      getClassicArtByDate(yesterday)
+        .then((art) => {
+          if (art) {
+            setYesterdayClassicArt(art.title);
+          } else {
+            setYesterdayClassicArt(null);
+          }
+        })
+        .catch((err) => {
+          console.error('Erro ao buscar arte de ontem:', err);
+          setYesterdayClassicArt(null);
+        });
+    };
+
     fetchStats();
-  
+    fetchYesterdayArt();
+
   }, [currentDate]);
 
   const properties = [
@@ -183,19 +201,19 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
     setAttempts([{ ...currentValues }, ...attempts]);
     
     if (Object.keys(answer).every(p => checkCorrect(p, currentValues[p]))) {
-      StreakManager.addDate(currentDate, "Clássico");
+      StreakManager.addWin(currentDate, "Clássico", attempts.length + 1);
       setHasWon(true);
 
       try {
         const dateString = currentDate.toISOString().split('T')[0];
         
+        setTodayHits(prevHits => prevHits + 1);
+
         await recordGameHit({
           date: dateString,
           gameMode: 'classicGame', 
           artname: classicArt.title
         });
-        
-        setTodayHits(prevHits => prevHits + 1);
 
       } catch (error) {
         console.error("Erro ao registrar o hit:", error);
@@ -274,6 +292,7 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
 
   return (
     <div className="game-page">
+
       {/* COMPONENTES DE VITÓRIA */}
       {showVictoryAnimation && <VictoryAnimation onComplete={() => setShowVictoryAnimation(false)} />}
       
@@ -283,8 +302,19 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
         artworkTitle={classicArt?.title}
         artworkImage={classicArt?.thumbnail?.full[0]}
         attemptsCount={attempts.length + 1}
+        todayHits={todayHits}
         gameType="classic"
         alreadyWon={alreadyWon}
+        onShowStats={() => {
+          setShowVictoryModal(false);
+          setShowStatsModal(true);
+        }}
+      />
+
+      <StatsModal
+          isOpen={showStatsModal}
+          onClose={() => setShowStatsModal(false)}
+          mode="Clássico"
       />
 
       {/* Logo */}
@@ -315,7 +345,11 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
 
       {/* Estatísticas / tutorial */}
       <div className="utility-icons">
-        <div className="utility-icon" style={{ cursor: 'pointer' }}>
+        <div 
+          className="utility-icon" 
+          style={{ cursor: 'pointer' }}
+          onClick={() => setShowStatsModal(true)}
+        >
           <FaChartBar />
           <span className="tooltip">Estatísticas</span>
         </div>
@@ -404,7 +438,7 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
         </div>
       )}
 
-      {classicArt && (!hasWon && !alreadyWon) && ( // Só mostra isso se ainda não ganhou
+      {classicArt && (!hasWon && !alreadyWon) && (
         <p className="stats-text" style={{ textAlign: 'center', margin: '1.5rem 0' }}>
           {todayHits} pessoas já acertaram todas as características da obra de hoje!
         </p>
@@ -427,7 +461,7 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
                 isMulti={answer && answer[field.property]?.length > 1} 
                 onChange={(selected) => setCurrentPropertyValue(field.property, selected)}
                 options={getAllPossibleValues(field.property)}
-                isDisabled={lockedProperties[field.property] || !classicArt || hasWon || alreadyWon} // Desabilitado se ganhou
+                isDisabled={lockedProperties[field.property] || !classicArt || hasWon || alreadyWon}
                 className={lockedProperties[field.property] ? 'locked-select' : ''}
                 isLoading={!optionsLoaded}
                 styles={{
@@ -451,11 +485,11 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
         <PostVictoryDisplay
           gameType="classic"
           artworkTitle={classicArt?.title}
-          onShowStats={() => setShowVictoryModal(true)} // Reabre o modal
+          onShowStats={() => setShowVictoryModal(true)}
         />
       )}
 
-      {/* Grid de tentativas: MARGEM SUPERIOR AUMENTADA PARA ESPAÇAMENTO */}
+      {/* Grid de tentativas */}
       <div className="attempts-grid" style={{ width: '100%', maxWidth: '1200px', margin: '2.5rem auto 0 auto' }}>
         <div className="attempts-header" style={{ 
           display: 'grid', 
@@ -466,7 +500,6 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
         }}>
           {properties.map((t) => (
             <div key={t.property} className="col-title" style={{ textAlign: 'center' }}>
-              {/* COR E TAMANHO DA FONTE ALTERADOS */}
               <div className="col-title-text" style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#000' }}>{t.label}</div>
               <div className="col-underline" />
             </div>
@@ -487,12 +520,10 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
                 const correct = checkCorrect(field.property, value);
               const partiallyCorrect = checkPartiallyCorrect(field.property, value);
               
-              // Verifica se precisa mostrar seta de década
               const isDecadeField = field.property === "data-da-obra-2";
               const showArrow = isDecadeField && answer && answer[field.property] && !correct && value && value.length > 0;
               const arrowDirection = showArrow && value[0] > answer[field.property][0] ? 'down' : 'up';
               
-              // Verifica se tem múltiplos valores corretos (mostra badge mesmo quando acerta)
               const hasMultipleValues = answer && answer[field.property] && answer[field.property].length > 1;
               const showBadge = hasMultipleValues && partiallyCorrect;
               
@@ -513,7 +544,6 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
                   }}
                   title={`${field.label}: ${valueAsString}`}>
                   
-                  {/* Badge de acerto parcial - posicionado no topo direito */}
                   {showBadge && (
                     <div className="partial-match-badge" style={{
                       position: 'absolute',
@@ -579,6 +609,10 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
           </div>
         ))}
       </div>
+
+      <p className="yesterday-text">
+        A obra de ontem foi: {yesterdayClassicArt}
+      </p>
 
       <CalendarModal
         isOpen={showCalendar}

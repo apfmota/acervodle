@@ -11,6 +11,7 @@ import VictoryModal from './VictoryModal';
 import PostVictoryDisplay from './PostVictoryDisplay';
 import { getStatsByDate, recordGameHit } from '../util/Statistics';
 import StreakManager from '../util/StreakManager.js';
+import StatsModal from './StatsModal';
 
 const SculptureGame = ({ loadingArt }) => {
   const [sculptureArt, setSculptureArt] = useState();
@@ -25,6 +26,7 @@ const SculptureGame = ({ loadingArt }) => {
   const [currentDate, setCurrentDate] = useState(todayMidnight());
   const [showVictoryAnimation, setShowVictoryAnimation] = useState(false);
   const [showVictoryModal, setShowVictoryModal] = useState(false);
+  const [showStatsModal, setShowStatsModal] = useState(false); 
   const [todayHits, setTodayHits] = useState(0);
   const [yesterdaySculpture, setYesterdaySculpture] = useState(null);
   const navigate = useNavigate();
@@ -74,7 +76,7 @@ const SculptureGame = ({ loadingArt }) => {
   const selectOptions = useMemo(
     () =>
       allSculptureTitles
-        .filter((title) => !attempts.includes(title)) // Remove tentativas já feitas
+        .filter((title) => !attempts.includes(title))
         .map((title) => ({
           value: title,
           label: title,
@@ -122,8 +124,9 @@ const SculptureGame = ({ loadingArt }) => {
       const isCorrect = guess.toLowerCase() === sculptureArt.title.toLowerCase();
 
       if (isCorrect) {
-        StreakManager.addDate(currentDate, "Escultura");
+        StreakManager.addWin(currentDate, "Escultura", attempts.length + 1);
         setHasWon(true);
+        setTodayHits((prevHits) => prevHits + 1);
         try {
           const dateString = currentDate.toISOString().split('T')[0];
           recordGameHit({
@@ -131,7 +134,6 @@ const SculptureGame = ({ loadingArt }) => {
             gameMode: 'sculptureGame',
             artname: sculptureArt.title,
           });
-          setTodayHits((prevHits) => prevHits + 1);
         } catch (error) {
           console.error('Erro ao registrar o hit:', error);
         }
@@ -143,11 +145,10 @@ const SculptureGame = ({ loadingArt }) => {
   };
 
   const handleGuessLocation = () => {
-    navigate('/map', { state: { artObject: sculptureArt, artType: 'sculpture' } });
+    navigate('/map', { state: { artObject: sculptureArt, artType: 'sculpture', dateOfArt: currentDate}});
   };
 
   const filterOptionByPrefix = (option, inputValue) => {
-    // Se não digitou nada, mostra todas as opções
     if (inputValue === '') {
       return true;
     }
@@ -171,9 +172,14 @@ const SculptureGame = ({ loadingArt }) => {
         artworkTitle={sculptureArt?.title}
         artworkImage={victoryImage}
         attemptsCount={attempts.length + 1}
+        todayHits={todayHits}
         gameType="sculpture"
         onGuessLocation={handleGuessLocation}
         alreadyWon={alreadyWon}
+        onShowStats={() => {
+          setShowVictoryModal(false);
+          setShowStatsModal(true);
+        }}
       />
 
       {/* Logo */}
@@ -204,7 +210,11 @@ const SculptureGame = ({ loadingArt }) => {
 
       {/* Ícones utilitários */}
       <div className="utility-icons">
-        <div className="utility-icon" style={{ cursor: 'pointer' }}>
+        <div 
+          className="utility-icon" 
+          style={{ cursor: 'pointer' }}
+          onClick={() => setShowStatsModal(true)}
+        >
           <FaChartBar />
           <span className="tooltip">Estatísticas</span>
         </div>
@@ -257,7 +267,6 @@ const SculptureGame = ({ loadingArt }) => {
 
       <p className="stats-text">{todayHits} pessoas já acertaram esta escultura!</p>
 
-      {/* LÓGICA DE EXIBIÇÃO ATUALIZADA */}
       {(!hasWon && !alreadyWon) ? (
         <form onSubmit={handleSubmit} className="guess-form">
           <Select
@@ -317,6 +326,12 @@ const SculptureGame = ({ loadingArt }) => {
         onDateSelect={changeDate}
         currentDate={currentDate}
         mode="Escultura"
+      />
+
+      <StatsModal
+          isOpen={showStatsModal}
+          onClose={() => setShowStatsModal(false)}
+          mode="Escultura"
       />
 
       {/* Tutorial */}
