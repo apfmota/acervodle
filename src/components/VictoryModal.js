@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-// ADICIONADO FaMapMarkerAlt
-import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaMapMarkerAlt } from 'react-icons/fa';
+import { 
+  FaPalette, 
+  FaPaintRoller, // Corrigido (em vez de FaPaintBrush)
+  FaChartBar, 
+  FaMapMarkerAlt, 
+  FaShareAlt // Adicionado
+} from 'react-icons/fa';
+import { GiStoneBust } from 'react-icons/gi'; // Corrigido (em vez de FaMonument)
 
 const VictoryModal = ({ 
   isOpen, 
@@ -11,10 +17,12 @@ const VictoryModal = ({
   attemptsCount, 
   gameType,
   alreadyWon,
-  onGuessLocation, // 1. ADICIONADA NOVA PROP
-  isLocationVictory = false // 1. ADICIONE A NOVA PROP COM VALOR PADRÃO
+  onGuessLocation,
+  isLocationVictory = false,
+  onCopy // 1. Prop de cópia adicionada
 }) => {
   const [timeRemaining, setTimeRemaining] = useState('');
+  const [copied, setCopied] = useState(false); // 2. Estado de "copiado"
 
   // Gera um número aleatório estável para a estatística
   const randomPlayerNumber = useMemo(() => Math.floor(Math.random() * 200) + 50, [artworkTitle]);
@@ -56,12 +64,20 @@ const VictoryModal = ({
   // Determina o nome do tipo de jogo para o texto
   const gameName = gameType === 'classic' ? 'obra' : (gameType === 'mural' ? 'mural' : 'escultura');
 
-  // 2. FUNÇÃO PARA LIDAR COM O CLIQUE (FECHA O MODAL E NAVEGA)
   const handleLocationClick = () => {
     if (onGuessLocation) {
       onGuessLocation();
     }
     onClose();
+  };
+
+  // 3. Função para lidar com o clique de copiar
+  const handleCopyClick = () => {
+    if (onCopy) {
+      onCopy();
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reseta o botão
+    }
   };
 
 
@@ -72,7 +88,6 @@ const VictoryModal = ({
           X
         </button>
 
-        {/* 2. TÍTULO E SUBTÍTULO CONDICIONAIS */}
         <h2 className="victory-modal-title">
           {isLocationVictory ? 'Localização Correta!' : (alreadyWon ? 'Você já acertou essa obra' : 'Você acertou!')}
         </h2>
@@ -93,13 +108,26 @@ const VictoryModal = ({
           </div>
         )}
         
-        {/* 3. BOTÕES RENDERIZADOS EM UM CONTAINER FLEX */}
+        {/* 4. GRUPO DE BOTÕES ATUALIZADO */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+          
+          {/* Botão Estatísticas */}
           <button className="victory-stats-button">
             <FaChartBar /> Estatísticas
           </button>
 
-          {/* 4. RENDERIZAÇÃO CONDICIONAL DO BOTÃO DE LOCALIZAÇÃO */}
+          {/* Botão Compartilhar */}
+          {onCopy && (
+            <button 
+              className="victory-stats-button" // Usa a mesma classe para o estilo azul
+              onClick={handleCopyClick}
+              style={copied ? { backgroundColor: '#4CAF50', color: 'white' } : {}}
+            >
+              <FaShareAlt /> {copied ? 'Copiado!' : 'Compartilhar'}
+            </button>
+          )}
+
+          {/* Botão Adivinhar Localização (Condicional) */}
           {(gameType === 'mural' || gameType === 'sculpture') && !isLocationVictory && !alreadyWon && (
             <button 
               className="victory-stats-button" 
@@ -117,7 +145,7 @@ const VictoryModal = ({
           <div className="victory-timer">{timeRemaining}</div>
         </div>
 
-        {/* Ícones dos modos de jogo */}
+        {/* 5. ÍCONES DE NAVEGAÇÃO CORRIGIDOS */}
         <div className="victory-modal-modes">
           <Link to="/classic" className="mode-icon-link" onClick={onClose}>
             <div className={`icon-circle ${gameType === 'classic' ? 'active' : ''}`}>
@@ -126,12 +154,12 @@ const VictoryModal = ({
           </Link>
           <Link to="/mural" className="mode-icon-link" onClick={onClose}>
             <div className={`icon-circle ${gameType === 'mural' ? 'active' : ''}`}>
-              <FaPaintBrush className="mode-icon" />
+              <FaPaintRoller className="mode-icon" />
             </div>
           </Link>
           <Link to="/sculpture" className="mode-icon-link" onClick={onClose}>
             <div className={`icon-circle ${gameType === 'sculpture' ? 'active' : ''}`}>
-              <FaMonument className="mode-icon" />
+              <GiStoneBust className="mode-icon" style={{ transform: 'scale(1.2)' }} />
             </div>
           </Link>
         </div>

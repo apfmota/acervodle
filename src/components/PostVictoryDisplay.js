@@ -1,17 +1,28 @@
-import React from 'react';
-import { FaMapMarkerAlt, FaTrophy } from 'react-icons/fa';
+import React, { useState } from 'react'; // 1. Importar useState
+import { FaMapMarkerAlt, FaTrophy, FaShareAlt } from 'react-icons/fa'; // 2. Importar FaShareAlt
 
 const PostVictoryDisplay = ({ 
   gameType, 
   artworkTitle, 
   onGuessLocation, 
   onShowStats, 
-  isLocationGame = false // 1. ADICIONADA NOVA PROP
+  isLocationGame = false,
+  onCopy // 3. Adicionar onCopy às props
 }) => {
   
+  const [copied, setCopied] = useState(false); // 4. Adicionar estado de "copiado"
   const isBonusGame = gameType === 'mural' || gameType === 'sculpture';
 
-  // 2. LÓGICA DE TÍTULO ATUALIZADA
+  // 5. Adicionar a função de clique
+  const handleCopyClick = () => {
+    if (onCopy) {
+      onCopy(); // Chama a função de cópia vinda do pai
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reseta o botão após 2s
+    }
+  };
+
+  // Lógica de título (já estava correta)
   let titleContent;
   if (isLocationGame) {
     titleContent = (
@@ -43,7 +54,17 @@ const PostVictoryDisplay = ({
           <FaTrophy /> Parabéns
         </button>
 
-        {/* 3. LÓGICA DO BOTÃO ATUALIZADA (só aparece se for bônus E NÃO for o jogo de localização) */}
+        {onCopy && (
+          <button 
+            className={`post-victory-btn stats ${copied ? 'copied' : ''}`} // <-- Mudei 'share' para 'stats'
+            onClick={handleCopyClick}
+            style={copied ? { backgroundColor: '#4CAF50', color: 'white' } : {}} // O 'style' só vai aplicar o verde quando copiado
+          >
+            <FaShareAlt /> {copied ? 'Resultado Copiado!' : 'Compartilhar!'}
+          </button>
+        )}
+
+        {/* Lógica do botão de localização (já estava correta) */}
         {isBonusGame && !isLocationGame && (
           <button className="post-victory-btn location" onClick={onGuessLocation}>
             <FaMapMarkerAlt /> Adivinhar Localização

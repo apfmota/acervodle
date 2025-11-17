@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   FaPalette,
   FaPaintBrush,
+  FaPaintRoller,
   FaMonument,
   FaChartBar,
   FaQuestion,
@@ -11,6 +12,7 @@ import {
   FaCalendarAlt, 
   FaFire
 } from 'react-icons/fa';
+import { GiStoneBust } from 'react-icons/gi';
 import { titleSet, fillTitles } from '../util/ClassicModeDataFetch';
 import Select from 'react-select';
 import { getMuralArtByDate } from '../util/DailyArt';
@@ -172,8 +174,28 @@ const MuralGame = ({ loadingArt }) => {
 
   const handleGuessLocation = () => {
     if (muralArt) {
-      navigate('/map', { state: { artObject: muralArt, artType: 'mural' } });
+      navigate('/map', { state: { artObject: muralArt, artType: 'mural', previousAttempts: attempts.length + 1 } });
     }
+  };
+
+  const handleCopyMural = () => {
+    const dateStr = currentDate.toLocaleDateString('pt-BR');
+    const attemptsNum = attempts.length + 1; // +1 pela tentativa correta
+
+    let text = `Acervodle #${dateStr} - Modo Mural\n`;
+    text += `Descobri o mural em ${attemptsNum} ${attemptsNum === 1 ? 'tentativa' : 'tentativas'}!\n\n`;
+
+    // Emojis de "zoom"
+    let zoomEmojis = '';
+    for (let i = 0; i < attemptsNum; i++) {
+      zoomEmojis += '🖼️'; // Um emoji de quadro para cada tentativa
+    }
+    text += zoomEmojis + '\n\n';
+    text += 'https://acervodle.vercel.app/'; // Mude para o seu link!
+
+    navigator.clipboard.writeText(text).catch(err => {
+      console.error('Falha ao copiar:', err);
+    });
   };
 
   return (
@@ -192,6 +214,7 @@ const MuralGame = ({ loadingArt }) => {
         gameType="mural"
         onGuessLocation={handleGuessLocation}
         alreadyWon={alreadyWon}
+        onCopy={handleCopyMural}
       />
 
       {/* Logo */}
@@ -210,12 +233,12 @@ const MuralGame = ({ loadingArt }) => {
         </Link>
         <Link to="/mural" className="mode-icon-link">
           <div className="icon-circle active">
-            <FaPaintBrush className="mode-icon" />
+            <FaPaintRoller className="mode-icon" />
           </div>
         </Link>
         <Link to="/sculpture" className="mode-icon-link">
           <div className="icon-circle">
-            <FaMonument className="mode-icon" />
+            <GiStoneBust className="mode-icon" style={{ transform: 'scale(1.2)' }} />
           </div>
         </Link>
       </div>
@@ -294,6 +317,7 @@ const MuralGame = ({ loadingArt }) => {
           artworkTitle={muralArt?.title}
           onGuessLocation={handleGuessLocation}
           onShowStats={() => setShowVictoryModal(true)}
+          onCopy={handleCopyMural}
         />
       )}
 

@@ -3,7 +3,8 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { getAllSculptures, getAllMurals } from '../taincan/taincanAPI'; 
 
-import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion } from 'react-icons/fa';
+import { FaPalette, FaPaintRoller, FaPaintBrush, FaMonument, FaChartBar, FaQuestion } from 'react-icons/fa';
+import { GiStoneBust } from 'react-icons/gi';
 
 import VictoryAnimation from './VictoryAnimation';
 import VictoryModal from './VictoryModal';
@@ -23,7 +24,7 @@ L.Icon.Default.mergeOptions({
 const GuessLocationPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { artObject, artType } = location.state || {};
+  const { artObject, artType, previousAttempts } = location.state || {};
   
   const [artClusters, setArtClusters] = useState([]);
   const [allArt, setAllArt] = useState([]);
@@ -134,6 +135,23 @@ const GuessLocationPage = () => {
     }
   };
 
+  const handleCopyLocation = () => {
+    const dateStr = new Date().toLocaleDateString('pt-BR');
+    const gameName = artType === 'mural' ? 'Mural' : 'Escultura';
+    const mainGameAttempts = previousAttempts || 0; // Pega o N° de tentativas do jogo principal
+    const locationAttempts = wrongGuesses.size + 1; // N° de tentativas da fase de localização
+
+    let text = `Acervodle #${dateStr} - ${gameName}\n`;
+    text += `Descobri a obra em ${mainGameAttempts} ${mainGameAttempts === 1 ? 'tentativa' : 'tentativas'}!\n`;
+    text += `➕ Localização: Acerto em ${locationAttempts} ${locationAttempts === 1 ? 'tentativa' : 'tentativas'}!\n\n`;
+
+    text += 'https://acervodle.vercel.app/'; // Mude para o seu link!
+
+    navigator.clipboard.writeText(text).catch(err => {
+      console.error('Falha ao copiar:', err);
+    });
+  };
+
   if (!artObject) {
     navigate('/');
     return null;
@@ -153,6 +171,7 @@ const GuessLocationPage = () => {
         attemptsCount={wrongGuesses.size + 1}
         gameType={artType}
         isLocationVictory={true}
+        onCopy={handleCopyLocation}
       />
 
       {/* Logo com link para home - IGUAL aos outros jogos */}
@@ -171,12 +190,12 @@ const GuessLocationPage = () => {
         </Link>
         <Link to="/mural" className="mode-icon-link">
           <div className="icon-circle">
-            <FaPaintBrush className="mode-icon" />
+            <FaPaintRoller className="mode-icon" />
           </div>
         </Link>
         <Link to="/sculpture" className="mode-icon-link">
           <div className="icon-circle">
-            <FaMonument className="mode-icon" />
+            <GiStoneBust className="mode-icon" style={{ transform: 'scale(1.2)' }} />
           </div>
         </Link>
       </div>
@@ -272,6 +291,7 @@ const GuessLocationPage = () => {
             artworkTitle={artObject?.title}
             onShowStats={() => setShowVictoryModal(true)}
             isLocationGame={true}
+            onCopy={handleCopyLocation}
           />
         )}
       </div>

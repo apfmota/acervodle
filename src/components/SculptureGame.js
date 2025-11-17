@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaPalette, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaCheck, FaMapMarkerAlt, FaCalendarAlt, FaFire } from 'react-icons/fa';
+import { FaPalette, FaPaintRoller, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaCheck, FaMapMarkerAlt, FaCalendarAlt, FaFire } from 'react-icons/fa';
+import { GiStoneBust } from 'react-icons/gi';
 import { fillTitles } from '../util/ClassicModeDataFetch';
 import Select from 'react-select';
 import { getSculptureArtByDate } from '../util/DailyArt';
@@ -143,7 +144,7 @@ const SculptureGame = ({ loadingArt }) => {
   };
 
   const handleGuessLocation = () => {
-    navigate('/map', { state: { artObject: sculptureArt, artType: 'sculpture' } });
+    navigate('/map', { state: { artObject: sculptureArt, artType: 'sculpture', previousAttempts: attempts.length + 1 } });
   };
 
   const filterOptionByPrefix = (option, inputValue) => {
@@ -154,9 +155,27 @@ const SculptureGame = ({ loadingArt }) => {
     return option.label.toLowerCase().startsWith(inputValue.toLowerCase());
   };
 
+  const handleCopySculpture = () => {
+    const dateStr = currentDate.toLocaleDateString('pt-BR');
+    const attemptsNum = attempts.length + 1; // +1 pela tentativa correta
+
+    let text = `Acervodle #${dateStr} - Modo Escultura\n`;
+    text += `Descobri a escultura em ${attemptsNum} ${attemptsNum === 1 ? 'tentativa' : 'tentativas'}!\n\n`;
+
+    // Emojis de "silhueta"
+    let silhouetteEmojis = '👤'.repeat(attemptsNum);
+    text += silhouetteEmojis + '\n\n';
+    text += 'https://acervodle.vercel.app/'; // Mude para o seu link!
+
+    navigator.clipboard.writeText(text).catch(err => {
+      console.error('Falha ao copiar:', err);
+    });
+  };
+
   const victoryImage = sculptureArt
     ? `/acervo_imgs/${sculptureArt.title.replace(/\s+/g, '_')}.jpg`
     : '';
+  
 
   return (
     <div className="game-page">
@@ -174,6 +193,7 @@ const SculptureGame = ({ loadingArt }) => {
         gameType="sculpture"
         onGuessLocation={handleGuessLocation}
         alreadyWon={alreadyWon}
+        onCopy={handleCopySculpture}
       />
 
       {/* Logo */}
@@ -192,12 +212,12 @@ const SculptureGame = ({ loadingArt }) => {
         </Link>
         <Link to="/mural" className="mode-icon-link">
           <div className="icon-circle">
-            <FaPaintBrush className="mode-icon" />
+            <FaPaintRoller className="mode-icon" />
           </div>
         </Link>
         <Link to="/sculpture" className="mode-icon-link">
           <div className="icon-circle active">
-            <FaMonument className="mode-icon" />
+            <GiStoneBust className="mode-icon" style={{ transform: 'scale(1.2)' }} />
           </div>
         </Link>
       </div>
@@ -284,6 +304,7 @@ const SculptureGame = ({ loadingArt }) => {
           artworkTitle={sculptureArt?.title}
           onGuessLocation={handleGuessLocation}
           onShowStats={() => setShowVictoryModal(true)}
+          onCopy={handleCopySculpture}
         />
       )}
 
