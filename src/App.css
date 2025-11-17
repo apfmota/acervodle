@@ -2165,3 +2165,59 @@ h1 {
   background-color: #c96a00;
   transform: translateY(-2px);
 }
+
+/* Container */
+.pagination {
+  display: flex;
+  gap: 8px;
+  padding: 10px 0;
+  list-style: none;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Page items (li) */
+.page-item {
+  display: flex;
+}
+
+/* Page links (a or buttons inside li) */
+.page-link {
+  display: block;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  color: #333;
+  background: white;
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Hover effect */
+.page-link:hover {
+  background: #f0f0f0;
+}
+
+/* Active (selected page) */
+.active .page-link {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+/* Disabled (when previous/next shouldn't be clickable) */
+.page-item.disabled .page-link {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Just to look nicer on mobile */
+@media (max-width: 600px) {
+  .page-link {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+}

@@ -21,6 +21,8 @@ import VictoryModal from './VictoryModal';
 import PostVictoryDisplay from './PostVictoryDisplay';
 import { getStatsByDate, recordGameHit } from '../util/Statistics';
 import StreakManager from '../util/StreakManager.js';
+import ArtList from './ArtList.js';
+import { getAllMurals } from '../taincan/taincanAPI.js';
 
 const MuralGame = ({ loadingArt }) => {
   const [muralArt, setMuralArt] = useState();
@@ -219,6 +221,8 @@ const MuralGame = ({ loadingArt }) => {
           </div>
         </Link>
       </div>
+
+      <ArtList itemsPromise={getAllMurals()}></ArtList>
 
       {/* Ícones de estatísticas e tutorial */}
       <div className="utility-icons">

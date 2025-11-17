@@ -11,6 +11,8 @@ import VictoryModal from './VictoryModal';
 import PostVictoryDisplay from './PostVictoryDisplay';
 import { getStatsByDate, recordGameHit } from '../util/Statistics';
 import StreakManager from '../util/StreakManager.js';
+import { getAllSculptures } from '../taincan/taincanAPI.js';
+import ArtList from './ArtList.js';
 
 const SculptureGame = ({ loadingArt }) => {
   const [sculptureArt, setSculptureArt] = useState();
@@ -201,6 +203,8 @@ const SculptureGame = ({ loadingArt }) => {
           </div>
         </Link>
       </div>
+
+      <ArtList itemsPromise={getAllSculptures()}></ArtList>
 
       {/* Ícones utilitários */}
       <div className="utility-icons">
