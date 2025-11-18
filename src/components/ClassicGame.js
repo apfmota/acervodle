@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { FaPalette, FaPaintRoller, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaLightbulb, FaSpinner, FaCalendarAlt, FaFire, FaArrowDown, FaArrowUp } from 'react-icons/fa';
 import { GiStoneBust } from 'react-icons/gi';
@@ -166,6 +166,32 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
     {label: 'Temática', property: 'tematica'},
   ]
 
+  // Função para obter opções filtradas (remove valores já tentados incorretamente)
+  const getFilteredOptions = useMemo(() => {
+    return (property) => {
+      const allOptions = getAllPossibleValues(property);
+      
+      // Coletar todos os valores já tentados para esta propriedade
+      const triedValues = new Set();
+      attempts.forEach(attempt => {
+        const attemptValue = attempt[property];
+        if (attemptValue && !checkCorrect(property, attemptValue)) {
+          // Se foi tentado e estava errado, adicionar ao set
+          if (Array.isArray(attemptValue)) {
+            attemptValue.forEach(v => triedValues.add(v));
+          } else {
+            triedValues.add(attemptValue);
+          }
+        }
+      });
+      
+      // Filtrar as opções removendo os valores já tentados incorretamente
+      return allOptions.filter(option => 
+        option.value === 'Nenhum' || !triedValues.has(option.value)
+      );
+    };
+  }, [attempts, answer]);
+
   const checkCorrect = (property, value) => {
     if (value == undefined) {
       value = [];
@@ -200,6 +226,15 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
     setLockedProperties(newLocked);
 
     setAttempts([{ ...currentValues }, ...attempts]);
+    
+    // Limpar campos não-bloqueados após submeter
+    const newValues = {...currentValues};
+    Object.keys(newValues).forEach(prop => {
+      if (!newLocked[prop]) {
+        newValues[prop] = [];
+      }
+    });
+    setCurrentValues(newValues);
     
     if (Object.keys(answer).every(p => checkCorrect(p, currentValues[p]))) {
       StreakManager.addWin(currentDate, "Clássico", attempts.length + 1);
@@ -492,7 +527,7 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
                 isClearable
                 isMulti={answer && answer[field.property]?.length > 1} 
                 onChange={(selected) => setCurrentPropertyValue(field.property, selected)}
-                options={getAllPossibleValues(field.property)}
+                options={getFilteredOptions(field.property)}
                 isDisabled={lockedProperties[field.property] || !classicArt || hasWon || alreadyWon}
                 className={lockedProperties[field.property] ? 'locked-select' : ''}
                 isLoading={!optionsLoaded}
@@ -577,8 +612,8 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
                       justifyContent: 'center',
                       wordBreak: 'break-word',
                       position: 'relative',
-                      flexDirection: showArrow ? 'column' : 'row',
-                      gap: showArrow ? '0.25rem' : '0'
+                      flexDirection: 'row',
+                      gap: '0.5rem'
                     }}
                     title={`${field.label}: ${valueAsString}`}>
                     
@@ -600,44 +635,36 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
                     )}
                     
                     <div className="attempt-text-content" style={{
-                      width: showArrow ? '100%' : (showBadge ? '100%' : '70%'),
+                      flex: 1,
                       wordBreak: 'break-word',
                       overflowY: 'auto',
                       whiteSpace: 'normal',
-                      maxHeight: showArrow ? '40px' : '50px',
+                      maxHeight: '50px',
                       textAlign: 'center',
                       paddingRight: showBadge ? '35px' : '0'
                     }}>
                       {valueAsString}
                     </div>
                     
-                    {/* Seta de década estilo LoLdle */}
+                    {/* Seta de década - ao lado do texto */}
                     {showArrow && (
                       <div className="decade-arrow" style={{
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        width: '26px',
-                        height: '26px',
-                        borderRadius: '4px',
-                        background: '#005285',
-                        transform: 'rotate(45deg)',
-                        boxShadow: '0 3px 8px rgba(0, 82, 133, 0.4)',
-                        marginTop: '0.4rem'
+                        flexShrink: 0
                       }}>
                         {arrowDirection === 'down' ? (
                           <FaArrowDown style={{ 
-                            color: '#fff', 
-                            fontSize: '11px', 
-                            transform: 'rotate(-45deg)',
-                            fontWeight: 'bold'
+                            color: '#ff9800', 
+                            fontSize: '20px',
+                            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))'
                           }} />
                         ) : (
                           <FaArrowUp style={{ 
-                            color: '#fff', 
-                            fontSize: '11px', 
-                            transform: 'rotate(-45deg)',
-                            fontWeight: 'bold'
+                            color: '#ff9800', 
+                            fontSize: '20px',
+                            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))'
                           }} />
                         )}
                       </div>

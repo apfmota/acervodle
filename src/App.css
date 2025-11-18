@@ -1024,15 +1024,9 @@ h1 {
     right: 2px !important;
   }
 
-  /* Reduz o losango de década no mobile para não quebrar o layout */
-  .decade-arrow {
-    width: 15px !important;
-    height: 15px !important;
-    margin-top: 0.25rem !important;
-  }
-  
+  /* Reduz a seta de década no mobile */
   .decade-arrow svg {
-    font-size: 8px !important;
+    font-size: 16px !important;
   }
 
   /* Remove largura mínima dos títulos de coluna no mobile para alinhar com os quadrados */
