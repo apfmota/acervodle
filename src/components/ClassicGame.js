@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { FaPalette, FaPaintRoller, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaLightbulb, FaSpinner, FaCalendarAlt, FaFire, FaArrowDown, FaArrowUp } from 'react-icons/fa';
+import { FaPalette, FaPaintRoller, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaLightbulb, FaSpinner, FaCalendarAlt, FaFire, FaArrowDown, FaArrowUp, FaSearchMinus, FaSearchPlus } from 'react-icons/fa';
 import { GiStoneBust } from 'react-icons/gi';
 import Select from 'react-select';
 import { fillPossibleValues, getAllPossibleValues, getArtProperties } from '../util/ClassicModeDataFetch.js';
@@ -37,6 +37,7 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
   const [todayHits, setTodayHits] = useState(0);
   const [yesterdayClassicArt, setYesterdayClassicArt] = useState(null);
   const [activeHint, setActiveHint] = useState(null);
+  const [isZoomedOut, setIsZoomedOut] = useState(false);
 
   useEffect(() => {
     loadingOptions.then(() => {
@@ -166,6 +167,41 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
     {label: 'Temática', property: 'tematica'},
   ]
 
+  // Função para obter opções filtradas (remove valores já tentados incorretamente)
+  const getFilteredOptions = useMemo(() => {
+    return (property) => {
+      const allOptions = getAllPossibleValues(property);
+      
+      // Coletar todos os valores já tentados para esta propriedade que estão COMPLETAMENTE errados
+      const triedValues = new Set();
+      attempts.forEach(attempt => {
+        const attemptValue = attempt[property];
+        
+        if (attemptValue) {
+          // Se é array, verificar cada valor individualmente
+          if (Array.isArray(attemptValue)) {
+            attemptValue.forEach(v => {
+              // Só adiciona se o valor NÃO está na resposta correta
+              if (!answer[property] || !answer[property].includes(v)) {
+                triedValues.add(v);
+              }
+            });
+          } else {
+            // Se não é array, verificar se o valor não está na resposta
+            if (!answer[property] || !answer[property].includes(attemptValue)) {
+              triedValues.add(attemptValue);
+            }
+          }
+        }
+      });
+      
+      // Filtrar as opções removendo os valores já tentados incorretamente
+      return allOptions.filter(option => 
+        option.value === 'Nenhum' || !triedValues.has(option.value)
+      );
+    };
+  }, [attempts, answer]);
+
   const checkCorrect = (property, value) => {
     if (value == undefined) {
       value = [];
@@ -200,6 +236,15 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
     setLockedProperties(newLocked);
 
     setAttempts([{ ...currentValues }, ...attempts]);
+    
+    // Limpar campos não-bloqueados após submeter
+    const newValues = {...currentValues};
+    Object.keys(newValues).forEach(prop => {
+      if (!newLocked[prop]) {
+        newValues[prop] = [];
+      }
+    });
+    setCurrentValues(newValues);
     
     if (Object.keys(answer).every(p => checkCorrect(p, currentValues[p]))) {
       StreakManager.addWin(currentDate, "Clássico", attempts.length + 1);
@@ -492,7 +537,7 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
                 isClearable
                 isMulti={answer && answer[field.property]?.length > 1} 
                 onChange={(selected) => setCurrentPropertyValue(field.property, selected)}
-                options={getAllPossibleValues(field.property)}
+                options={getFilteredOptions(field.property)}
                 isDisabled={lockedProperties[field.property] || !classicArt || hasWon || alreadyWon}
                 className={lockedProperties[field.property] ? 'locked-select' : ''}
                 isLoading={!optionsLoaded}
@@ -522,15 +567,47 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
         />
       )}
 
+      {/* Botão de Zoom - FORA do container de scroll, fixo no centro */}
       {attempts.length > 0 && (
-        <div className="attempts-grid" style={{ width: '100%', maxWidth: '1200px', margin: '2.5rem auto 0 auto' }}>
-          
+        <div className="zoom-toggle-container" style={{
+          display: 'flex',
+          justifyContent: 'center',
+          marginBottom: '1rem',
+          marginTop: '1rem'
+        }}>
+          <button
+            className="zoom-toggle-button"
+            onClick={() => setIsZoomedOut(!isZoomedOut)}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#005285',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+            }}
+          >
+            {isZoomedOut ? <FaSearchPlus /> : <FaSearchMinus />}
+            <span>{isZoomedOut ? 'Zoom In' : 'Zoom Out'}</span>
+          </button>
+        </div>
+      )}
+
+      {attempts.length > 0 && (
+        <div className={`attempts-grid ${isZoomedOut ? 'zoomed-out' : ''}`} style={{ width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
+
         <div className="attempts-header" style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(6, 1fr)',
-          gap: '1.5rem',
+          gap: isZoomedOut ? '0.15rem' : '1.5rem',
           marginBottom: '0.5rem',
-          padding: '0 0.5rem'
+          padding: isZoomedOut ? '0' : '0 0.5rem'
         }}>
         {properties.map((t) => (
         <div key={t.property} className="col-title" style={{ textAlign: 'center' }}>
@@ -546,9 +623,9 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
             <div key={idx} className="attempt-row" style={{ 
               display: 'grid',
               gridTemplateColumns: 'repeat(6, 1fr)',
-              gap: '1.5rem',
+              gap: isZoomedOut ? '0.1rem' : '1.5rem',
               marginBottom: '0.5rem',
-              padding: '0 0.5rem'
+              padding: isZoomedOut ? '0' : '0 0.5rem'
             }}>
               {properties.map((field) => {
                 const value = attempt[field.property] || '';
@@ -577,8 +654,8 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
                       justifyContent: 'center',
                       wordBreak: 'break-word',
                       position: 'relative',
-                      flexDirection: showArrow ? 'column' : 'row',
-                      gap: showArrow ? '0.25rem' : '0'
+                      flexDirection: 'row',
+                      gap: '0.5rem'
                     }}
                     title={`${field.label}: ${valueAsString}`}>
                     
@@ -600,44 +677,36 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
                     )}
                     
                     <div className="attempt-text-content" style={{
-                      width: showArrow ? '100%' : (showBadge ? '100%' : '70%'),
+                      flex: 1,
                       wordBreak: 'break-word',
                       overflowY: 'auto',
                       whiteSpace: 'normal',
-                      maxHeight: showArrow ? '40px' : '50px',
+                      maxHeight: '50px',
                       textAlign: 'center',
                       paddingRight: showBadge ? '35px' : '0'
                     }}>
                       {valueAsString}
                     </div>
                     
-                    {/* Seta de década estilo LoLdle */}
+                    {/* Seta de década - ao lado do texto */}
                     {showArrow && (
                       <div className="decade-arrow" style={{
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        width: '26px',
-                        height: '26px',
-                        borderRadius: '4px',
-                        background: '#005285',
-                        transform: 'rotate(45deg)',
-                        boxShadow: '0 3px 8px rgba(0, 82, 133, 0.4)',
-                        marginTop: '0.4rem'
+                        flexShrink: 0
                       }}>
                         {arrowDirection === 'down' ? (
                           <FaArrowDown style={{ 
-                            color: '#fff', 
-                            fontSize: '11px', 
-                            transform: 'rotate(-45deg)',
-                            fontWeight: 'bold'
+                            color: '#ff9800', 
+                            fontSize: '20px',
+                            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))'
                           }} />
                         ) : (
                           <FaArrowUp style={{ 
-                            color: '#fff', 
-                            fontSize: '11px', 
-                            transform: 'rotate(-45deg)',
-                            fontWeight: 'bold'
+                            color: '#ff9800', 
+                            fontSize: '20px',
+                            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))'
                           }} />
                         )}
                       </div>
