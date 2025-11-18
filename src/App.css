@@ -965,6 +965,11 @@ h1 {
   transform: translateY(-4px);
 }
 
+/* Esconde o botão de zoom no desktop por padrão */
+.zoom-toggle-button {
+  display: none !important;
+}
+
 /* Responsividade */
 @media (max-width: 900px) {
   .attempts-grid { max-width: 100%; }
@@ -997,6 +1002,23 @@ h1 {
     margin: 0 auto;         /* garante centralização */
   }
   .col-underline { height:4px; width:72%; }
+
+  /* ZOOM OUT - sobrescreve as regras acima quando ativado */
+  .attempts-grid.zoomed-out .attempts-header,
+  .attempts-grid.zoomed-out .attempt-row {
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 0.1rem !important;
+    min-width: auto !important;
+    padding: 0 !important;
+    justify-items: stretch !important;
+  }
+
+  .attempts-grid.zoomed-out .attempt-square {
+    width: auto !important;
+    max-width: 58px !important;
+    min-width: 54px !important;
+    margin: 0 !important;
+  }
 
   /* Se o grid exceder a largura, permite rolagem horizontal suave */
   /* já definido acima para evitar duplicação */
@@ -1033,6 +1055,77 @@ h1 {
   .col-title {
     min-width: 90px;   /* alinha a largura do título à coluna */
     width: 100%;
+  }
+
+  /* Mostra o botão de zoom apenas no mobile */
+  .zoom-toggle-button {
+    display: flex !important;
+  }
+
+  /* Modo Zoom Out - aplica apenas no mobile quando a classe zoomed-out está presente */
+  .attempts-grid.zoomed-out .attempts-header,
+  .attempts-grid.zoomed-out .attempt-row {
+    gap: 0.1rem !important;
+    min-width: auto !important;
+    padding: 0 !important;
+  }
+
+  .attempts-grid.zoomed-out .attempts-header {
+    font-size: 0.55rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .attempts-grid.zoomed-out .col-title {
+    min-width: auto !important;
+    width: auto !important;
+    max-width: 58px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .attempts-grid.zoomed-out .col-title-text {
+    font-size: 0.55rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .attempts-grid.zoomed-out .col-underline {
+    width: 60% !important;
+    height: 2px !important;
+  }
+
+  .attempts-grid.zoomed-out .attempt-square {
+    width: auto !important;
+    max-width: 58px !important;
+    min-width: 54px !important;
+    padding: 0.2rem 0.1rem !important;
+    min-height: 32px !important;
+    height: 32px !important;
+    max-height: 32px !important;
+    font-size: 0.55rem !important;
+    gap: 0.1rem !important;
+    margin: 0 !important;
+  }
+
+  .attempts-grid.zoomed-out .attempt-text-content {
+    font-size: 0.55rem !important;
+    max-height: 30px !important;
+    line-height: 1.1 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    padding: 0 !important;
+  }
+
+  .attempts-grid.zoomed-out .partial-match-badge {
+    top: 1px !important;
+    right: 1px !important;
+    padding: 1px 3px !important;
+    font-size: 0.45rem !important;
+  }
+
+  .attempts-grid.zoomed-out .decade-arrow svg {
+    font-size: 9px !important;
   }
 }
 

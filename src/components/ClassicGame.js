@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { FaPalette, FaPaintRoller, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaLightbulb, FaSpinner, FaCalendarAlt, FaFire, FaArrowDown, FaArrowUp } from 'react-icons/fa';
+import { FaPalette, FaPaintRoller, FaPaintBrush, FaMonument, FaChartBar, FaQuestion, FaLightbulb, FaSpinner, FaCalendarAlt, FaFire, FaArrowDown, FaArrowUp, FaSearchMinus, FaSearchPlus } from 'react-icons/fa';
 import { GiStoneBust } from 'react-icons/gi';
 import Select from 'react-select';
 import { fillPossibleValues, getAllPossibleValues, getArtProperties } from '../util/ClassicModeDataFetch.js';
@@ -37,6 +37,7 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
   const [todayHits, setTodayHits] = useState(0);
   const [yesterdayClassicArt, setYesterdayClassicArt] = useState(null);
   const [activeHint, setActiveHint] = useState(null);
+  const [isZoomedOut, setIsZoomedOut] = useState(false);
 
   useEffect(() => {
     loadingOptions.then(() => {
@@ -171,16 +172,25 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
     return (property) => {
       const allOptions = getAllPossibleValues(property);
       
-      // Coletar todos os valores já tentados para esta propriedade
+      // Coletar todos os valores já tentados para esta propriedade que estão COMPLETAMENTE errados
       const triedValues = new Set();
       attempts.forEach(attempt => {
         const attemptValue = attempt[property];
-        if (attemptValue && !checkCorrect(property, attemptValue)) {
-          // Se foi tentado e estava errado, adicionar ao set
+        
+        if (attemptValue) {
+          // Se é array, verificar cada valor individualmente
           if (Array.isArray(attemptValue)) {
-            attemptValue.forEach(v => triedValues.add(v));
+            attemptValue.forEach(v => {
+              // Só adiciona se o valor NÃO está na resposta correta
+              if (!answer[property] || !answer[property].includes(v)) {
+                triedValues.add(v);
+              }
+            });
           } else {
-            triedValues.add(attemptValue);
+            // Se não é array, verificar se o valor não está na resposta
+            if (!answer[property] || !answer[property].includes(attemptValue)) {
+              triedValues.add(attemptValue);
+            }
           }
         }
       });
@@ -557,15 +567,47 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
         />
       )}
 
+      {/* Botão de Zoom - FORA do container de scroll, fixo no centro */}
       {attempts.length > 0 && (
-        <div className="attempts-grid" style={{ width: '100%', maxWidth: '1200px', margin: '2.5rem auto 0 auto' }}>
-          
+        <div className="zoom-toggle-container" style={{
+          display: 'flex',
+          justifyContent: 'center',
+          marginBottom: '1rem',
+          marginTop: '1rem'
+        }}>
+          <button
+            className="zoom-toggle-button"
+            onClick={() => setIsZoomedOut(!isZoomedOut)}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#005285',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+            }}
+          >
+            {isZoomedOut ? <FaSearchPlus /> : <FaSearchMinus />}
+            <span>{isZoomedOut ? 'Zoom In' : 'Zoom Out'}</span>
+          </button>
+        </div>
+      )}
+
+      {attempts.length > 0 && (
+        <div className={`attempts-grid ${isZoomedOut ? 'zoomed-out' : ''}`} style={{ width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
+
         <div className="attempts-header" style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(6, 1fr)',
-          gap: '1.5rem',
+          gap: isZoomedOut ? '0.15rem' : '1.5rem',
           marginBottom: '0.5rem',
-          padding: '0 0.5rem'
+          padding: isZoomedOut ? '0' : '0 0.5rem'
         }}>
         {properties.map((t) => (
         <div key={t.property} className="col-title" style={{ textAlign: 'center' }}>
@@ -581,9 +623,9 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
             <div key={idx} className="attempt-row" style={{ 
               display: 'grid',
               gridTemplateColumns: 'repeat(6, 1fr)',
-              gap: '1.5rem',
+              gap: isZoomedOut ? '0.1rem' : '1.5rem',
               marginBottom: '0.5rem',
-              padding: '0 0.5rem'
+              padding: isZoomedOut ? '0' : '0 0.5rem'
             }}>
               {properties.map((field) => {
                 const value = attempt[field.property] || '';
