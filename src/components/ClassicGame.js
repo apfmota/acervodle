@@ -172,35 +172,41 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
     return (property) => {
       const allOptions = getAllPossibleValues(property);
       
-      // Coletar todos os valores já tentados para esta propriedade que estão COMPLETAMENTE errados
+      // Valores atualmente selecionados neste campo
+      const currentlySelected = new Set(currentValues[property] || []);
+      
+      // Coletar valores que foram tentados em tentativas COMPLETAMENTE ERRADAS
+      // (não parcialmente corretas, para não entregar pistas)
       const triedValues = new Set();
       attempts.forEach(attempt => {
         const attemptValue = attempt[property];
         
         if (attemptValue) {
-          // Se é array, verificar cada valor individualmente
-          if (Array.isArray(attemptValue)) {
-            attemptValue.forEach(v => {
-              // Só adiciona se o valor NÃO está na resposta correta
-              if (!answer[property] || !answer[property].includes(v)) {
-                triedValues.add(v);
-              }
-            });
-          } else {
-            // Se não é array, verificar se o valor não está na resposta
-            if (!answer[property] || !answer[property].includes(attemptValue)) {
+          // Verificar se a tentativa inteira estava completamente errada
+          const isPartiallyCorrect = checkPartiallyCorrect(property, attemptValue);
+          
+          // Só adiciona valores ao triedValues se a tentativa estava TOTALMENTE ERRADA
+          if (!isPartiallyCorrect) {
+            if (Array.isArray(attemptValue)) {
+              attemptValue.forEach(v => triedValues.add(v));
+            } else {
               triedValues.add(attemptValue);
             }
           }
+          // Se estava parcialmente correta, NÃO remove nenhum valor
+          // (para não entregar quais estavam certos e quais errados)
         }
       });
       
-      // Filtrar as opções removendo os valores já tentados incorretamente
+      // Filtrar as opções removendo os valores já tentados incorretamente,
+      // MAS mantendo valores que estão atualmente selecionados (para permitir desmarcar)
       return allOptions.filter(option => 
-        option.value === 'Nenhum' || !triedValues.has(option.value)
+        option.value === 'Nenhum' || 
+        !triedValues.has(option.value) || 
+        currentlySelected.has(option.value)
       );
     };
-  }, [attempts, answer]);
+  }, [attempts, answer, currentValues]);
 
   const checkCorrect = (property, value) => {
     if (value == undefined) {
@@ -238,10 +244,19 @@ const ClassicGame = ({ loadingArt, loadingOptions }) => {
     setAttempts([{ ...currentValues }, ...attempts]);
     
     // Limpar campos não-bloqueados após submeter
-    const newValues = {...currentValues};
+    // Nova lógica: limpar apenas campos que estão COMPLETAMENTE ERRADOS.
+    // Se o campo estiver parcialmente correto (algum valor correto entre os selecionados),
+    // mantemos a seleção para não entregar pistas desnecessárias.
+    const newValues = { ...currentValues };
     Object.keys(newValues).forEach(prop => {
       if (!newLocked[prop]) {
-        newValues[prop] = [];
+        const val = newValues[prop];
+        const isPartial = checkPartiallyCorrect(prop, val);
+        // Se não está parcialmente correto (ou seja, totalmente errado), limpar
+        if (!isPartial) {
+          newValues[prop] = [];
+        }
+        // Caso contrário, manter a seleção (não limpar)
       }
     });
     setCurrentValues(newValues);
