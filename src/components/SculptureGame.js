@@ -349,11 +349,6 @@ const SculptureGame = ({ loadingArt }) => {
           >
             {attempt}
             <div className="attempt-count">
-              <span className="people-icon">👥</span>
-              {Math.floor(Math.random() * 500) + 1}
-              <div className="attempt-count-tooltip">
-                O número de jogadores que também tentaram essa tentativa!
-              </div>
             </div>
           </div>
         ))}
