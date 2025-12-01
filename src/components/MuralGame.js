@@ -108,7 +108,10 @@ const MuralGame = ({ loadingArt }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (guess.trim() && muralArt && !hasWon) {
-      const isCorrect = guess.toLowerCase() === muralArt.title.toLowerCase();
+      const currentGuess = guess;
+      setGuess('');
+      
+      const isCorrect = currentGuess.toLowerCase() === muralArt.title.toLowerCase();
 
       if (isCorrect) {
 
@@ -131,8 +134,7 @@ const MuralGame = ({ loadingArt }) => {
         }
       } else {
         setZoom(Math.max(100, zoom - 80));
-        setAttempts([guess, ...attempts]);
-        setGuess('');
+        setAttempts([currentGuess, ...attempts]);
       }
     }
   };
@@ -330,7 +332,7 @@ const MuralGame = ({ loadingArt }) => {
         <form onSubmit={handleSubmit} className="guess-form">
           <Select
             options={selectOptions}
-            value={selectOptions.find((option) => option.value === guess)}
+            value={guess ? selectOptions.find((option) => option.value === guess) : null}
             onChange={(selectedOption) => setGuess(selectedOption ? selectedOption.value : '')}
             placeholder="Digite sua tentativa..."
             className="guess-input-select"
