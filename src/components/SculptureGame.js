@@ -138,7 +138,10 @@ const SculptureGame = ({ loadingArt }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (guess.trim() && sculptureArt && !hasWon) {
-      const isCorrect = guess.toLowerCase() === sculptureArt.title.toLowerCase();
+      const currentGuess = guess;
+      setGuess('');
+      
+      const isCorrect = currentGuess.toLowerCase() === sculptureArt.title.toLowerCase();
 
       if (isCorrect) {
         StreakManager.addWin(currentDate, "Escultura", attempts.length + 1);
@@ -155,8 +158,7 @@ const SculptureGame = ({ loadingArt }) => {
           console.error('Erro ao registrar o hit:', error);
         }
       } else {
-        setAttempts([guess, ...attempts]);
-        setGuess('');
+        setAttempts([currentGuess, ...attempts]);
       }
     }
   };
@@ -313,7 +315,7 @@ const SculptureGame = ({ loadingArt }) => {
         <form onSubmit={handleSubmit} className="guess-form">
           <Select
             options={selectOptions}
-            value={selectOptions.find((option) => option.value === guess)}
+            value={guess ? selectOptions.find((option) => option.value === guess) : null}
             onChange={(selectedOption) =>
               setGuess(selectedOption ? selectedOption.value : '')
             }
